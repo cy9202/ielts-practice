@@ -369,6 +369,70 @@ async function aiReview(body) {
   } catch { return "連不上批改伺服器，請檢查網路後再試。"; }
 }
 
+/* ---------- 錄音轉文字（Whisper，在 Cloudflare 上跑） ---------- */
+const TRANSCRIBE_URL = "https://ielts-review.cy9202.workers.dev/transcribe";
+const canRecord = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+let activeRec = null;   // 同一時間只錄一段
+
+// 不管瀏覽器錄成 webm 還是 mp4，都先轉成 16kHz 單聲道 WAV 再送出
+async function toWav16k(blob) {
+  const raw = await blob.arrayBuffer();
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new Ctx();
+  const decoded = await ctx.decodeAudioData(raw);
+  ctx.close();
+  const rate = 16000, len = Math.ceil(decoded.duration * rate);
+  const off = new OfflineAudioContext(1, len, rate);
+  const src = off.createBufferSource(); src.buffer = decoded; src.connect(off.destination); src.start();
+  const pcm = (await off.startRendering()).getChannelData(0);
+  const buf = new ArrayBuffer(44 + pcm.length * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); w(8, "WAVE"); w(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, "data"); v.setUint32(40, pcm.length * 2, true);
+  for (let i = 0; i < pcm.length; i++) { const s = Math.max(-1, Math.min(1, pcm[i])); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true); }
+  return new Blob([buf], { type: "audio/wav" });
+}
+
+function recorder(ta, onText) {
+  if (!canRecord) return el("span", { class: "status" }, "這個瀏覽器不能錄音，請用 Chrome、Edge 或 Safari。");
+  const status = el("span", { class: "status" });
+  const player = el("audio", { controls: true, hidden: true, style: "width:100%;max-width:420px;height:36px" });
+  const btn = el("button", { class: "b primary" }, "● 錄音");
+  let rec = null, chunks = [], t0 = 0, iv = null, stream = null;
+  const stop = () => { if (rec && rec.state === "recording") rec.stop(); };
+  btn.addEventListener("click", async () => {
+    if (rec && rec.state === "recording") { stop(); return; }
+    if (activeRec && activeRec !== stop) activeRec();
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch { status.textContent = "沒有拿到麥克風權限。請在網址列左邊的鎖頭圖示允許麥克風。"; return; }
+    chunks = []; rec = new MediaRecorder(stream);
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    rec.onstop = async () => {
+      clearInterval(iv); activeRec = null;
+      stream.getTracks().forEach(t => t.stop());
+      btn.textContent = "● 重錄"; btn.disabled = true;
+      const blob = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
+      player.src = URL.createObjectURL(blob); player.hidden = false;
+      status.textContent = "轉文字中…";
+      try {
+        const wav = await toWav16k(blob);
+        const r = await fetch(TRANSCRIBE_URL, { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) status.textContent = j.message || "轉文字失敗，請再錄一次。";
+        else { onText(j.text); status.textContent = "已轉成文字，放進下面的回答欄。"; }
+      } catch { status.textContent = "轉文字失敗，請檢查網路後再錄一次。"; }
+      btn.disabled = false;
+    };
+    rec.start(); t0 = Date.now(); activeRec = stop;
+    btn.textContent = "■ 停止 0:00"; status.textContent = "錄音中，說完按停止。";
+    iv = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); btn.textContent = `■ 停止 ${mmss(s)}`; if (s >= 300) stop(); }, 500);
+  });
+  return el("div", { style: "display:flex;flex-direction:column;gap:6px" },
+    el("div", { class: "btns", style: "align-items:center" }, btn, status), player);
+}
+
 /* ---------- 口說 ---------- */
 function speakItems() {
   if (SP.mode === "p1") return P1.map(([t, k, qs], i) => ({ id: "p1-" + i, title: t, kind: k, qs }));
@@ -437,7 +501,7 @@ function nextTopic() {
 }
 function answerArea(qid, question, part) {
   const draftKey = "draft:" + qid;
-  const ta = el("textarea", { id: "ans-" + qid, rows: "4", placeholder: "可貼上手機錄音轉成的文字，或寫下關鍵字" });
+  const ta = el("textarea", { id: "ans-" + qid, rows: "4", placeholder: "按上面的「錄音」作答，或直接打字" });
   ta.value = store.get(draftKey, "");
   ta.addEventListener("input", () => store.set(draftKey, ta.value));
   const fb = el("div", { class: "feedback", hidden: true });
@@ -455,7 +519,8 @@ function answerArea(qid, question, part) {
     else status.textContent = "已存在這台裝置。";
   } }, "存到紀錄");
   return el("div", { style: "display:flex;flex-direction:column;gap:8px" },
-    el("label", { class: "f", for: "ans-" + qid }, "我的回答"), ta,
+    recorder(ta, text => { ta.value = ta.value.trim() ? ta.value.trim() + "\n" + text : text; store.set(draftKey, ta.value); }),
+    el("label", { class: "f", for: "ans-" + qid }, "我的回答（錄音會自動轉成文字放這裡，也可以自己修改）"), ta,
     el("div", { class: "btns" }, saveBtn, askBtn, status), fb);
 }
 function markButtons(qid) {
