@@ -869,16 +869,27 @@ function renderWrPanel() {
     "問題解決題：解法有說清楚誰來做、怎麼做；雙問句：兩個問題都分開回答",
     "開頭簡短概括題意，結論沒有省略也沒有加新觀點",
   ];
-  const rw = el("div", { class: "feedback", hidden: true });
+  // 範文存在這台電腦：同一篇只改寫一次，下次直接顯示
+  const rwKey = "rewrite:" + wrKey();
+  const cached = store.get(rwKey, null);
+  const essayNow = essayText(data);
+  const rw = el("div", { class: "feedback", hidden: !cached });
+  const rwNote = el("span", { class: "status" });
+  if (cached) {
+    rw.replaceChildren(compareView(data, cached.r));
+    if (cached.essay !== essayNow) rwNote.textContent = "你的文章在範文產生後改過了，右邊範文是依舊版改寫的。";
+  }
   const rwBtn = el("button", { class: "b", onclick: async () => {
     const essay = essayText(data);
     if (wordCount(essay) < 40) { rw.hidden = false; rw.textContent = "先把文章寫得完整一點，再請 AI 改寫範文。"; return; }
-    rwBtn.disabled = true; rw.hidden = false; rw.textContent = "正在依你的文章改寫範文，大約 20–30 秒…";
+    rwBtn.disabled = true; rw.hidden = false; rwNote.textContent = ""; rw.textContent = "正在依你的文章改寫範文，大約 20–30 秒…";
     const r = await requestRewrite({ type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: essay });
     rwBtn.disabled = false;
     if (!r.text) { rw.textContent = r.message; return; }
+    store.set(rwKey, { essay, r });
     rw.replaceChildren(compareView(data, r));
-  } }, "依我的文章改寫範文");
+    rwBtn.textContent = "重新改寫一篇";
+  } }, !cached ? "依我的文章改寫範文" : cached.essay !== essayNow ? "依修改後的文章重新改寫" : "重新改寫一篇");
   const fb = el("div", { class: "feedback", hidden: true });
   const status = el("span", { class: "status" });
   const askBtn = el("button", { class: "b", onclick: async () => {
@@ -903,8 +914,8 @@ function renderWrPanel() {
       return el("label", { for: id, style: "display:flex;gap:8px;align-items:flex-start;font-size:14px" }, cb, c);
     })),
     el("div", { class: "btns" }, saveBtn, askBtn,
-      el("button", { class: "b", onclick: () => { for (const k of Object.keys(data)) delete data[k]; save(); WR.step = 0; renderWrite(); } }, "清空重寫"), status),
-    fb, el("div", { class: "btns" }, rwBtn), rw);
+      el("button", { class: "b", onclick: () => { for (const k of Object.keys(data)) delete data[k]; save(); store.set(rwKey, null); WR.step = 0; renderWrite(); } }, "清空重寫"), status),
+    fb, el("div", { class: "btns", style: "align-items:center" }, rwBtn, rwNote), rw);
 }
 function renderWrite() { renderWrFilters(); renderWrList(); renderWrPanel(); }
 
