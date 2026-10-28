@@ -262,6 +262,16 @@ const P2 = [
 // 寫作 Task 2：2026 年 10 月考生回憶真題（第三方整理 ieltswritingpractice.app，措辭可能與實際略有出入）
 // [題型, 題目, 考試週]
 const TYPES = {opinion:"同意／不同意",discuss:"兩方觀點＋己見",advdis:"優點／缺點",posneg:"正面／負面發展",problem:"原因／解法",two:"雙問句"};
+// Task 2 各題型的標準段落架構（參考 ukus.tw〈雅思寫作 Task 2 五大題型〉整理；positive/negative 歸在優缺點題）
+const STRUCT = {
+  opinion: "同意或不同意題。完全同意／不同意：P1 引言概述議題並表明立場；P2 第一個理由（解釋＋例子）；P3 第二個理由（解釋＋例子）；P4 結論重申立場。部分同意：P2 寫同意的部分、P3 寫不同意的部分，P4 整理立場。立場在引言就要明確，結論再強調。",
+  discuss: "雙面討論題。P1 引言簡述背景、說明有兩種觀點；P2 第一種觀點的理由與例子；P3 第二種觀點的理由與例子；P4 結論清楚寫出自己的立場與理由。分析兩方時保持客觀，但整篇一定要表態。",
+  advdis: "優缺點題。P1 引言概述議題並預告要討論優缺點；P2 優點（解釋＋例子）；P3 缺點（解釋＋例子）；P4 結論回顧，題目問哪邊比較多時要明確判斷。篇幅不必平均。",
+  posneg: "優缺點題（positive or negative development 的問法）。P1 引言概述現象；P2 正面影響（解釋＋例子）；P3 負面影響（解釋＋例子）；P4 結論明確判斷整體是正面還是負面。",
+  problem: "問題與解決方案題。P1 引言概述問題背景；P2 問題或原因分析（描述、解釋、舉例）；P3 具體解決方法（做法、由誰執行：政府／個人／企業，並舉例）；P4 結論簡述問題與解法。問題和解法不要混在同一段，解法要具體，不能只寫「政府應該想辦法」。",
+  two: "直接提問題（雙問句）。P1 引言簡短概括題意並預告兩題的答案；P2 回答第一個問題（立場或原因＋理由＋例子）；P3 回答第二個問題（具體內容＋說明）；P4 結論簡述並再次強調看法。兩個問題要分開回答，不能漏掉任何一題。",
+};
+const STRUCT_TIPS = "通用要求：立場要明確，不能整篇都「一方面…另一方面…」而不表態；每段只聚焦一個重點；例子用生活觀察或社會現象即可，要具體；開頭簡短概括題意；結論段不能省略。";
 const W2 = [
  ["advdis","Some cities have vehicle-free days when private cars, trucks, and motorcycles are banned from the city centre. People are encouraged to use public transportation such as buses, taxis, and metro on vehicle-free days. Do the advantages of having vehicle-free days outweigh the disadvantages?","10/19–10/25"],
  ["problem","Nowadays people use bicycles less as a form of transport. Why is that? What can we do to encourage people to use bicycles more?","10/19–10/25"],
@@ -801,7 +811,7 @@ function renderWrPanel() {
     p.append(framesBar(data), fs, el("div", { class: "btns" },
       el("button", { class: "b", disabled: WR.step === 0, onclick: () => { WR.step--; renderWrPanel(); } }, "上一步"),
       el("button", { class: "b primary", onclick: () => { WR.step++; renderWrPanel(); } }, WR.step === FIELDS.length - 1 ? "看整篇文章 →" : "下一步")));
-    if (WR.step === 0 && WR.sel !== -1) p.append(el("p", { class: "note" }, "提示：這題是「" + TYPES[W2[WR.sel][0]] + "」。先判斷題型再決定立場，雙問句兩個問題都要回答。"));
+    if (WR.step === 0) { const t = WR.sel !== -1 ? W2[WR.sel][0] : data.kind; if (STRUCT[t]) p.append(el("div", { class: "frames" }, el("span", { class: "frames-h" }, "這個題型的標準架構"), el("div", { class: "frame-x" }, STRUCT[t]), el("div", { class: "frame-n" }, STRUCT_TIPS))); }
     return;
   }
 
@@ -811,18 +821,18 @@ function renderWrPanel() {
     el("p", { class: words >= 250 ? "status" : "status warn-text" }, `共 ${words} 字${words >= 250 ? "" : "，不到 250 字，任務回應會被扣分"}`),
     ...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, t || "（還沒寫）"))));
   const checks = [
-    "立場在引言和結論都看得到，而且一致",
-    "每個主體段只有一個論點",
-    "例子是具體的情境，不是「研究顯示」",
-    "連接詞沒有每句開頭都用",
-    "結論沒有加入新觀點",
+    "立場明確，引言和結論一致（雙面討論題結論一定要表態）",
+    "每段只聚焦一個重點，段落安排符合這個題型的標準架構",
+    "例子具體（生活觀察、社會現象都可以），不是「研究顯示」",
+    "問題解決題：解法有說清楚誰來做、怎麼做；雙問句：兩個問題都分開回答",
+    "開頭簡短概括題意，結論沒有省略也沒有加新觀點",
   ];
   const fb = el("div", { class: "feedback", hidden: true });
   const status = el("span", { class: "status" });
   const askBtn = el("button", { class: "b", onclick: async () => {
     askBtn.disabled = true; fb.hidden = false; fb.textContent = "AI 批改中，大約 10–20 秒…";
     const text = `題型判斷：${TYPES[data.kind] || "未選"}\n立場：${data.stance || ""}\n\n文章：\n${essayText(data)}`;
-    showReview(fb, await aiReview({ kind: "writing", question: wrPrompt(), answer: text }), "寫作");
+    showReview(fb, await aiReview({ kind: "writing", type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: text }), "寫作");
     askBtn.disabled = false;
   } }, "AI 批改文章");
   const saveBtn = el("button", { class: "b primary", onclick: async () => {
