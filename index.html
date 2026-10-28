@@ -794,7 +794,7 @@ function compareView(data, r) {
       el("span", {}, x.text),
       el("div", { class: "sent-tag" },
         x.role ? el("span", { class: "sent-role" }, x.role) : null,
-        x.pattern && x.pattern !== "—" ? el("span", { class: "sent-pat" }, x.pattern) : null)))));
+        x.pattern && x.pattern !== "—" ? el("span", { class: "sent-pat" }, x.pattern.replace(/\[[^\]]*\]/g, "…").replace(/…(?:[\s,]*…)+/g, "…")) : null)))));
     list = r.changes || [];
   } else {
     const [model, changes = ""] = r.text.split(/\n\s*改了什麼[:：]/);
