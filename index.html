@@ -569,7 +569,7 @@ function answerArea(qid, question, part) {
   const askBtn = el("button", { class: "b", onclick: async () => {
     if (!ta.value.trim()) { status.textContent = "先寫下或貼上你的回答，才能請 AI 批改。"; return; }
     askBtn.disabled = true; fb.hidden = false; fb.textContent = "AI 批改中，大約 10–20 秒…";
-    fb.textContent = await aiReview({ kind: "speaking", part, question, answer: ta.value });
+    showReview(fb, await aiReview({ kind: "speaking", part, question, answer: ta.value }), "口說 Part " + part);
     askBtn.disabled = false;
   } }, "AI 批改");
   const saveBtn = el("button", { class: "b", onclick: async () => {
@@ -823,7 +823,7 @@ function renderWrPanel() {
 主體1：${["b1t","b1e","b1x","b1l"].map(k => data[k] || "").join(" ")}
 主體2：${["b2t","b2e","b2x","b2l"].map(k => data[k] || "").join(" ")}
 結論：${data.c1 || ""} ${data.c2 || ""}`;
-    fb.textContent = await aiReview({ kind: "writing", question: wrPrompt(), answer: text });
+    showReview(fb, await aiReview({ kind: "writing", question: wrPrompt(), answer: text }), "寫作");
     askBtn.disabled = false;
   } }, "AI 看大綱");
   const saveBtn = el("button", { class: "b primary", onclick: async () => {
@@ -847,89 +847,78 @@ function renderWrPanel() {
 }
 function renderWrite() { renderWrFilters(); renderWrList(); renderWrPanel(); }
 
-/* ---------- 搭配詞與常見錯誤 ---------- */
-// [分類, 錯誤說法, 正確說法, 說明, 例句]
-const COLLO = [
- ["中式英文","look back into the past","Looking back, … / When I look back, …","look back 本身就是回顧過去，不用再加 into the past","Looking back, I wish I had started learning English earlier."],
- ["中式英文","open / close the light","turn on / turn off the light","電器開關用 turn on / off","Could you turn off the light?"],
- ["中式英文","play (my) phone","use my phone / scroll through my phone / be on my phone","play 後面接遊戲或運動，不接手機","I spend too much time scrolling through my phone at night."],
- ["中式英文","eat medicine","take medicine","吃藥用 take","You should take this medicine after meals."],
- ["中式英文","big rain / strong rain","heavy rain","雨的大小用 heavy / light","We got caught in heavy rain on the way home."],
- ["中式英文","big pressure","a lot of pressure / intense pressure / under pressure","pressure 不用 big 形容","Students are under a lot of pressure before exams."],
- ["中式英文","expensive price / cheap price","high price / low price（或 It's expensive.）","price 本身用 high / low；expensive 形容東西","Housing prices in Taipei are extremely high."],
- ["中式英文","according to my experience","from my experience / in my experience","according to 用在引用別人或資料","In my experience, group projects teach you a lot about compromise."],
- ["中式英文","according to me","in my view / personally, I think","according to 不接 me","Personally, I think online classes work well for adults."],
- ["中式英文","learn knowledge","gain / acquire knowledge, learn a lot","learn 不接 knowledge","I gained a lot of practical knowledge from the internship."],
- ["中式英文","raise / increase my English","improve my English","能力進步用 improve","Watching films without subtitles really improved my English."],
- ["中式英文","borrow you my notes","lend you my notes","借出 = lend；借入 = borrow","I can lend you my notes if you missed the class."],
- ["中式英文","join the exam","take / sit an exam","考試用 take 或 sit","I'm going to sit the IELTS exam next month."],
- ["中式英文","solve the pollution","tackle / reduce pollution","solve 接 problem，pollution 用 tackle / reduce","Cities need stricter rules to tackle air pollution."],
- ["中式英文","develop economy","boost the economy / promote economic growth","economy 要加 the，常搭 boost","Tourism can boost the local economy."],
- ["動詞搭配","do a decision","make a decision","decision 搭 make","It was the best decision I've ever made."],
- ["動詞搭配","make homework","do homework","homework 搭 do","I usually do my homework right after dinner."],
- ["動詞搭配","make a photo","take a photo","拍照用 take","I took a lot of photos of the old buildings."],
- ["動詞搭配","go to abroad","go abroad","abroad 是副詞，前面不加 to","Many students hope to study abroad."],
- ["動詞搭配","go to home","go home","home 當副詞時不加 to","I usually go home around seven."],
- ["動詞搭配","enter into university","go to university / get into university","enter 不加 into；口語用 go to / get into","I got into university in 2022."],
- ["動詞搭配","spend time to do","spend time doing","spend + 時間 + V-ing","I spend most weekends sketching buildings."],
- ["動詞搭配","it's worth to do","it's worth doing","worth + V-ing","The old town is definitely worth visiting."],
- ["動詞搭配","suggest him to do","suggest that he do / suggest doing","suggest 不接 sb to do","My teacher suggested that I read more English news."],
- ["動詞搭配","make me to do / let me to do","make me do / let me do","make、let 後面接原形動詞","My parents let me choose my own major."],
- ["動詞搭配","look forward to see","look forward to seeing","這裡的 to 是介系詞，接 V-ing","I'm looking forward to seeing the results."],
- ["介系詞","discuss about","discuss（不加 about）","discuss 是及物動詞","We discussed the design in class."],
- ["介系詞","emphasize on","emphasise sth / put emphasis on sth","動詞不加 on，名詞才加","The course puts a lot of emphasis on teamwork."],
- ["介系詞","reach to","reach（不加 to）","reach 是及物動詞","We reached the top after two hours."],
- ["介系詞","pay attention on","pay attention to","固定搭配 to","Drivers should pay attention to cyclists."],
- ["介系詞","depend of","depend on","固定搭配 on","It depends on the weather."],
- ["介系詞","affect on","affect sth / have an effect on sth","affect 是動詞不加 on；effect 是名詞才加 on","Noise can have a serious effect on sleep."],
- ["介系詞","result to","result in / lead to","result 接 in","Poor planning often results in traffic jams."],
- ["介系詞","have a big influence to","have a big influence on","influence 接 on","My grandfather had a big influence on me."],
- ["介系詞","in the other hand","on the other hand","固定用 on","On the other hand, remote work can feel lonely."],
- ["介系詞","in nowadays","nowadays / these days","nowadays 前面不加 in","These days, most people pay with their phones."],
- ["介系詞","in the internet","on the internet / online","網路用 on","I found the information online."],
- ["介系詞","arrive to","arrive in（城市、國家）/ arrive at（地點）","arrive 不接 to","We arrived in Tokyo at midnight."],
- ["介系詞","married with","married to","be married to sb","She's married to an architect."],
- ["介系詞","good at do","good at doing","at 後面接 V-ing","He's really good at making models."],
- ["多餘的字","Although …, but …","Although …, …（擇一）","although 和 but 不能同時用","Although it was raining, we still went out."],
- ["多餘的字","Because …, so …","Because …, …（擇一）","because 和 so 不能同時用","Because the bus was late, I missed the class."],
- ["多餘的字","In my opinion, I think …","In my opinion, … / I think …","兩個意思一樣，用一個就好","In my opinion, public transport should be cheaper."],
- ["多餘的字","with my family together","with my family / together with my family","together 和 with 重複","I usually have dinner with my family."],
- ["多餘的字","The reason is because …","The reason is that …","reason 已經表示原因","The reason is that I live far from the city."],
- ["多餘的字","return back","return / go back","return 本身就是回去","I returned to my hometown last summer."],
- ["文法形式","I very like / I very agree","I really like / I strongly agree","very 不能修飾動詞","I strongly agree with this idea."],
- ["文法形式","I am agree","I agree","agree 是動詞，不加 be","I completely agree."],
- ["文法形式","I'm boring / I feel interesting","I'm bored / I'm interested","-ed 形容人的感覺，-ing 形容事物","I was bored during the long meeting."],
- ["文法形式","most of people","most people / most of the people","most of 後面要加 the 或所有格","Most people in my city ride scooters."],
- ["文法形式","the life is busy","life is busy","泛指人生不加 the","Life in a big city can be stressful."],
- ["文法形式","environment protection","environmental protection","名詞前用形容詞 environmental","Environmental protection should start at school."],
- ["文法形式","until now（搭現在完成式）","so far","so far 搭現在完成式比較自然","So far, I've visited five countries."],
- ["不可數名詞","informations / advices / furnitures","information / advice / furniture","這些是不可數名詞，不加 s","My teacher gave me some useful advice."],
- ["不可數名詞","a lot of homeworks / equipments","a lot of homework / equipment","不可數名詞","The studio has a lot of modern equipment."],
- ["不可數名詞","a big traffic","heavy traffic / a traffic jam","traffic 不可數，用 heavy 形容","There's always heavy traffic in the morning."],
-];
+/* ---------- 我的搭配詞（只放自己犯過的錯） ---------- */
 const MY_COLLO_KEY = "myCollo";
-const COLLO_STATE = { cat: "全部", q: "" };
+// 使用者在對話裡提過、確定犯過的錯
+const COLLO_SEED = [
+  { wrong: "look back into the past", right: "Looking back, … / When I look back, …", note: "look back 本身就是回顧過去，不用再加 into the past。例：Looking back, I wish I had started learning English earlier.", from: "口說練習", ts: 0 },
+];
+const COLLO_STATE = { q: "" };
+function myCollo() {
+  const mine = store.get(MY_COLLO_KEY, null);
+  if (mine) return mine;
+  store.set(MY_COLLO_KEY, COLLO_SEED);
+  return COLLO_SEED.slice();
+}
+function addCollo(items) {
+  const m = myCollo();
+  let added = 0;
+  for (const it of items) {
+    const w = it.wrong.trim(), r = it.right.trim();
+    if (!w || !r || m.some(x => x.wrong.toLowerCase() === w.toLowerCase())) continue;
+    m.unshift({ wrong: w, right: r, note: (it.note || "").trim(), from: it.from || "", ts: Date.now() });
+    added++;
+  }
+  store.set(MY_COLLO_KEY, m);
+  return added;
+}
+
+// AI 批改最後一行「FIXES: 錯 => 對 | 錯 => 對」：拿出來變成可加入表格的按鈕
+function parseFixes(text) {
+  const fixes = [];
+  const clean = text.replace(/^.*FIXES:(.*)$/m, (line, list) => {
+    for (const part of list.split("|")) {
+      const [w, r] = part.split("=>").map(x => (x || "").trim().replace(/^["“”']|["“”']$/g, ""));
+      if (w && r && w !== "無") fixes.push({ wrong: w, right: r });
+    }
+    return "";
+  }).trim();
+  return { text: clean, fixes };
+}
+function showReview(fb, raw, from) {
+  const { text, fixes } = parseFixes(raw);
+  fb.textContent = text;
+  if (!fixes.length) return;
+  const box = el("div", { class: "frames", style: "margin-top:12px;white-space:normal" },
+    el("span", { class: "frames-h" }, "這次用錯的說法"));
+  for (const f of fixes) {
+    const btn = el("button", { class: "b frame-use" }, "加入我的搭配詞");
+    btn.addEventListener("click", () => {
+      const n = addCollo([{ ...f, from }]);
+      btn.textContent = n ? "已加入" : "表格裡已經有了"; btn.disabled = true;
+    });
+    box.append(el("div", { class: "frame" },
+      el("div", {}, el("span", { class: "c-wrong" }, f.wrong), " → ", el("span", { class: "c-right" }, f.right)), btn));
+  }
+  fb.append(box);
+}
+
 function renderCollo() {
   const p = $("#collo-panel"); p.replaceChildren();
-  const mine = store.get(MY_COLLO_KEY, []);
-  const rows = [...mine.map((r, i) => ["我的錯誤", r.wrong, r.right, r.note, r.example || "", i]), ...COLLO];
-  const cats = ["全部", "我的錯誤", ...new Set(COLLO.map(r => r[0]))];
-  const search = el("input", { type: "text", id: "collo-q", placeholder: "搜尋，例如 look、price、on", value: COLLO_STATE.q });
-  const chips = el("div", { class: "btns" }, cats.map(c => el("button", { class: "chip", "aria-pressed": String(COLLO_STATE.cat === c), onclick: () => { COLLO_STATE.cat = c; renderCollo(); } },
-    c === "我的錯誤" ? `${c} · ${mine.length}` : c)));
+  const rows = myCollo();
+  const search = el("input", { type: "text", id: "collo-q", placeholder: "搜尋", value: COLLO_STATE.q });
   const tbody = el("tbody");
+  const when = ts => ts ? new Date(ts).toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" }) : "";
   const fill = () => {
     const q = COLLO_STATE.q.trim().toLowerCase();
-    const shown = rows.filter(r => (COLLO_STATE.cat === "全部" || r[0] === COLLO_STATE.cat) && (!q || r.slice(1, 5).join(" ").toLowerCase().includes(q)));
-    tbody.replaceChildren(...shown.map(r => el("tr", {},
-      el("td", { class: "c-wrong" }, r[1]),
-      el("td", { class: "c-right" }, r[2]),
-      el("td", {}, r[3]),
-      el("td", { class: "c-ex" }, r[4]),
-      el("td", { class: "c-cat" }, r[0] === "我的錯誤"
-        ? el("button", { class: "b", style: "font-size:12px;padding:2px 8px", onclick: () => { const m = store.get(MY_COLLO_KEY, []); m.splice(r[5], 1); store.set(MY_COLLO_KEY, m); renderCollo(); } }, "刪除")
-        : r[0]))));
-    if (!shown.length) tbody.append(el("tr", {}, el("td", { colspan: "5", class: "c-ex" }, COLLO_STATE.cat === "我的錯誤" ? "還沒有自己的錯誤。批改時看到被改的說法，從下面加進來。" : "沒有符合的說法。")));
+    const shown = rows.map((r, i) => [r, i]).filter(([r]) => !q || [r.wrong, r.right, r.note].join(" ").toLowerCase().includes(q));
+    tbody.replaceChildren(...shown.map(([r, i]) => el("tr", {},
+      el("td", { class: "c-wrong" }, r.wrong),
+      el("td", { class: "c-right" }, r.right),
+      el("td", {}, r.note || ""),
+      el("td", { class: "c-cat" }, [r.from, when(r.ts)].filter(Boolean).join(" · ")),
+      el("td", {}, el("button", { class: "b", style: "font-size:12px;padding:2px 8px", onclick: () => { const m = myCollo(); m.splice(i, 1); store.set(MY_COLLO_KEY, m); renderCollo(); } }, "刪除")))));
+    if (!shown.length) tbody.append(el("tr", {}, el("td", { colspan: "5", class: "c-ex" }, q ? "沒有符合的說法。" : "還沒有紀錄。AI 批改時按「加入我的搭配詞」就會出現在這裡。")));
   };
   search.addEventListener("input", () => { COLLO_STATE.q = search.value; fill(); });
   fill();
@@ -939,19 +928,16 @@ function renderCollo() {
   const msg = el("span", { class: "status" });
   const add = el("button", { class: "b primary", onclick: () => {
     if (!fw.value.trim() || !fr.value.trim()) { msg.textContent = "錯誤和正確說法都要填。"; return; }
-    const m = store.get(MY_COLLO_KEY, []);
-    m.unshift({ wrong: fw.value.trim(), right: fr.value.trim(), note: fn.value.trim(), ts: Date.now() });
-    store.set(MY_COLLO_KEY, m);
-    COLLO_STATE.cat = "我的錯誤"; renderCollo();
+    if (!addCollo([{ wrong: fw.value, right: fr.value, note: fn.value, from: "自己加的" }])) { msg.textContent = "表格裡已經有這個說法了。"; return; }
+    renderCollo();
   } }, "加入表格");
   p.append(
-    el("h2", { class: "q", style: "font-size:22px" }, "搭配詞與常見錯誤"),
-    el("p", { class: "note" }, "中文母語者口說和寫作最常犯的說法。左邊是錯誤或不自然的說法，右邊是道地說法。"),
-    search, chips,
+    el("h2", { class: "q", style: "font-size:22px" }, "我的搭配詞"),
+    el("p", { class: "note" }, `只放自己犯過的錯，共 ${rows.length} 筆。AI 批改後按「加入我的搭配詞」，或在下面自己加。`),
+    search,
     el("div", { class: "c-wrap" }, el("table", { class: "collo" },
-      el("thead", {}, el("tr", {}, ["錯誤說法", "正確說法", "說明", "例句", "分類"].map(h => el("th", {}, h)))), tbody)),
-    el("fieldset", {}, el("legend", {}, "加入我自己的錯誤"),
-      el("p", { class: "note" }, "AI 批改裡被改掉的說法，記在這裡，考前複習。"),
+      el("thead", {}, el("tr", {}, ["我說的", "正確說法", "說明", "來源", ""].map(h => el("th", {}, h)))), tbody)),
+    el("fieldset", {}, el("legend", {}, "自己加一筆"),
       el("div", { class: "c-form" }, fw, fr, fn), el("div", { class: "btns", style: "align-items:center" }, add, msg)));
 }
 
