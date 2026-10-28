@@ -759,6 +759,13 @@ const PARAS = [["Introduction", ["intro1", "intro2"]], ["Body 1", ["b1t", "b1e",
 function essayParas(data) { return PARAS.map(([h, ks]) => [h, ks.map(k => (data[k] || "").trim()).filter(Boolean).join(" ")]); }
 function essayText(data) { return essayParas(data).map(([, t]) => t).filter(Boolean).join("\n\n"); }
 function wordCount(t) { return (t.match(/[A-Za-z0-9’'-]+/g) || []).length; }
+async function requestRewrite(body) {
+  try {
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "rewrite", ...body }) });
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? j : { message: j.message || "這次沒有寫出範文，請再按一次。" };
+  } catch { return { message: "連不上伺服器，請檢查網路後再試。" }; }
+}
 function renderWrPanel() {
   const p = $("#wr-panel"); p.replaceChildren();
   const data = store.get(wrKey(), {});
@@ -827,6 +834,16 @@ function renderWrPanel() {
     "問題解決題：解法有說清楚誰來做、怎麼做；雙問句：兩個問題都分開回答",
     "開頭簡短概括題意，結論沒有省略也沒有加新觀點",
   ];
+  const rw = el("div", { class: "feedback", hidden: true });
+  const rwBtn = el("button", { class: "b", onclick: async () => {
+    const essay = essayText(data);
+    if (wordCount(essay) < 40) { rw.hidden = false; rw.textContent = "先把文章寫得完整一點，再請 AI 改寫範文。"; return; }
+    rwBtn.disabled = true; rw.hidden = false; rw.textContent = "正在依你的文章改寫範文，大約 20–30 秒…";
+    const r = await requestRewrite({ type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: essay });
+    rwBtn.disabled = false;
+    if (!r.text) { rw.textContent = r.message; return; }
+    rw.replaceChildren(el("div", { class: "frames-h" }, `依你的文章改寫的範文 · ${r.words} 字`), document.createTextNode("\n" + r.text));
+  } }, "依我的文章改寫範文");
   const fb = el("div", { class: "feedback", hidden: true });
   const status = el("span", { class: "status" });
   const askBtn = el("button", { class: "b", onclick: async () => {
@@ -852,7 +869,7 @@ function renderWrPanel() {
     })),
     el("div", { class: "btns" }, saveBtn, askBtn,
       el("button", { class: "b", onclick: () => { for (const k of Object.keys(data)) delete data[k]; save(); WR.step = 0; renderWrite(); } }, "清空重寫"), status),
-    fb);
+    fb, el("div", { class: "btns" }, rwBtn), rw);
 }
 function renderWrite() { renderWrFilters(); renderWrList(); renderWrPanel(); }
 
