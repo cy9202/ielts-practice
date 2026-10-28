@@ -849,10 +849,8 @@ function renderWrite() { renderWrFilters(); renderWrList(); renderWrPanel(); }
 
 /* ---------- 我的搭配詞（只放自己犯過的錯） ---------- */
 const MY_COLLO_KEY = "myCollo";
-// 使用者在對話裡提過、確定犯過的錯
-const COLLO_SEED = [
-  { wrong: "look back into the past", right: "Looking back, … / When I look back, …", note: "look back 本身就是回顧過去，不用再加 into the past。例：Looking back, I wish I had started learning English earlier.", from: "口說練習", ts: 0 },
-];
+// 公開網站給朋友用，不預先放我的錯誤
+const COLLO_SEED = [];
 const COLLO_STATE = { q: "" };
 function myCollo() {
   const mine = store.get(MY_COLLO_KEY, null);
