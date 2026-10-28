@@ -356,6 +356,20 @@ function runTimer({ seconds, countUp = false, target = 0, onEnd, render }) {
 }
 const mmss = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
+/* ---------- AI 批改（Cloudflare Workers AI 免費模型） ---------- */
+const REVIEW_URL = "https://ielts-review.cy9202.workers.dev/review";
+async function aiReview(body) {
+  try {
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return j.message || "AI 這次沒有回應，請稍後再試。";
+    return j.text + (typeof j.left === "number" ? `
+
+（今天還能批改 ${j.left} 次）` : "");
+  } catch { return "連不上批改伺服器，請檢查網路後再試。"; }
+}
+const aiNote = () => el("p", { class: "note" }, "AI 批改用的是免費開源模型，分數僅供參考；每人每天 10 次。");
+
 /* ---------- 口說 ---------- */
 function speakItems() {
   if (SP.mode === "p1") return P1.map(([t, k, qs], i) => ({ id: "p1-" + i, title: t, kind: k, qs }));
@@ -430,22 +444,11 @@ function answerArea(qid, question, part) {
   const fb = el("div", { class: "feedback", hidden: true });
   const status = el("span", { class: "status" });
   const askBtn = el("button", { class: "b", onclick: async () => {
-    if (!ta.value.trim()) { status.textContent = "先貼上逐字稿，才能請 Claude 回饋。"; return; }
-    if (!sample) { status.textContent = "這個畫面沒有開放 Claude 回饋，可以把逐字稿貼到對話裡。"; return; }
-    askBtn.disabled = true; fb.hidden = false; fb.textContent = "Claude 正在看…";
-    try {
-      const prompt = `你是資深雅思口說考官。考生目標 7 分，平常約 6 分。以下是 Part ${part} 的題目與考生回答逐字稿。
-請用繁體中文回覆，格式：
-1. 四項評分（流利與連貫、詞彙、文法、發音只能從逐字稿推測就註明「無法判斷」）各估一個分數並一句理由。
-2. 最該改的 2 點，引用原句並給改寫。
-3. 一個 7 分版本的示範回答（英文，長度與 Part ${part} 相符）。
-題目：${question}
-逐字稿：${ta.value}`;
-      const r = await sample(prompt, { onText: u => { fb.textContent = u.text; } });
-      fb.textContent = r.text;
-    } catch (e) { fb.textContent = e && e.code === "rate_limited" ? "請求太頻繁，稍後再試。" : "這次沒有取得回饋，可以把逐字稿貼到對話裡。"; }
+    if (!ta.value.trim()) { status.textContent = "先寫下或貼上你的回答，才能請 AI 批改。"; return; }
+    askBtn.disabled = true; fb.hidden = false; fb.textContent = "AI 批改中，大約 10–20 秒…";
+    fb.textContent = await aiReview({ kind: "speaking", part, question, answer: ta.value });
     askBtn.disabled = false;
-  } }, "請 Claude 回饋");
+  } }, "AI 批改");
   const saveBtn = el("button", { class: "b", onclick: async () => {
     const rec = { qid, part, question, answer: ta.value, mark: marks[qid] || "", ts: Date.now() };
     const logs = store.get("spLog", []); logs.unshift(rec); store.set("spLog", logs.slice(0, 200));
@@ -454,7 +457,7 @@ function answerArea(qid, question, part) {
   } }, "存到紀錄");
   return el("div", { style: "display:flex;flex-direction:column;gap:8px" },
     el("label", { class: "f", for: "ans-" + qid }, "我的回答"), ta,
-    el("div", { class: "btns" }, saveBtn, status));
+    el("div", { class: "btns" }, saveBtn, askBtn, status), fb, aiNote());
 }
 function markButtons(qid) {
   const done = el("button", { class: "b donebtn", "aria-pressed": String(marks[qid] === "done"), onclick: () => { setMark(qid, "done"); renderSpeak(); } }, "✓ 練好了");
@@ -636,21 +639,16 @@ function renderWrPanel() {
   const fb = el("div", { class: "feedback", hidden: true });
   const status = el("span", { class: "status" });
   const askBtn = el("button", { class: "b", onclick: async () => {
-    if (!sample) { status.textContent = "這個畫面沒有開放 Claude 回饋，可以到「紀錄」複製後貼到對話裡。"; return; }
-    askBtn.disabled = true; fb.hidden = false; fb.textContent = "Claude 正在看…";
-    const text = `題目：${wrPrompt()}\n題型判斷：${TYPES[data.kind] || "未選"}\n立場：${data.stance || ""}\n引言：${data.intro1 || ""} ${data.intro2 || ""}\n主體1：${["b1t","b1e","b1x","b1l"].map(k => data[k] || "").join(" ")}\n主體2：${["b2t","b2e","b2x","b2l"].map(k => data[k] || "").join(" ")}\n結論：${data.c1 || ""} ${data.c2 || ""}`;
-    try {
-      const r = await sample(`你是資深雅思寫作考官。考生目標寫作 7 分。以下是考生的 Task 2 大綱與每段要用的句子（還不是完整文章）。
-請用繁體中文回覆：
-1. 題型判斷對不對；立場是否清楚、是否回答到題目的每個部分。
-2. 依「任務回應」「連貫與銜接」「詞彙」「文法」各給一句評語與預估分數。
-3. 逐段指出最需要改的一句，給出英文改寫。
-4. 最後一句：照這個大綱寫成文章，最容易在哪裡掉分。
-${text}`, { onText: u => { fb.textContent = u.text; } });
-      fb.textContent = r.text;
-    } catch (e) { fb.textContent = e && e.code === "rate_limited" ? "請求太頻繁，稍後再試。" : "這次沒有取得回饋，可以把大綱貼到對話裡。"; }
+    askBtn.disabled = true; fb.hidden = false; fb.textContent = "AI 批改中，大約 10–20 秒…";
+    const text = `題型判斷：${TYPES[data.kind] || "未選"}
+立場：${data.stance || ""}
+引言：${data.intro1 || ""} ${data.intro2 || ""}
+主體1：${["b1t","b1e","b1x","b1l"].map(k => data[k] || "").join(" ")}
+主體2：${["b2t","b2e","b2x","b2l"].map(k => data[k] || "").join(" ")}
+結論：${data.c1 || ""} ${data.c2 || ""}`;
+    fb.textContent = await aiReview({ kind: "writing", question: wrPrompt(), answer: text });
     askBtn.disabled = false;
-  } }, "請 Claude 看大綱");
+  } }, "AI 看大綱");
   const saveBtn = el("button", { class: "b primary", onclick: async () => {
     data.done = true; save();
     const rec = { prompt: wrPrompt(), ...data, ts: Date.now() };
@@ -666,9 +664,9 @@ ${text}`, { onText: u => { fb.textContent = u.text; } });
       cb.addEventListener("change", () => { data.checks = { ...(data.checks || {}), [i]: cb.checked }; save(); });
       return el("label", { for: id, style: "display:flex;gap:8px;align-items:flex-start;font-size:14px" }, cb, c);
     })),
-    el("div", { class: "btns" }, saveBtn,
+    el("div", { class: "btns" }, saveBtn, askBtn,
       el("button", { class: "b", onclick: () => { for (const k of Object.keys(data)) delete data[k]; save(); WR.step = 0; renderWrite(); } }, "清空重寫"), status),
-  );
+    fb, aiNote());
 }
 function renderWrite() { renderWrFilters(); renderWrList(); renderWrPanel(); }
 
