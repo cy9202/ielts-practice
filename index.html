@@ -82,6 +82,10 @@ textarea{resize:vertical;min-height:64px;line-height:1.55}
 .step[aria-current="true"]{border-color:var(--accent);color:var(--accent);font-weight:500}
 fieldset{border:1px solid var(--line);border-radius:10px;padding:14px 16px 16px;margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
 legend{font-weight:700;font-size:14px;padding:0 6px}
+.prompt-box.exam{display:flex;flex-direction:column;gap:10px;font-family:Georgia,"Times New Roman",serif}
+.prompt-box.exam p{margin:0}
+.exam-h{font-family:var(--f-body);font-weight:700;letter-spacing:.06em}
+.exam-q{font-weight:700;border:1px solid var(--line);background:var(--surface);padding:12px 14px;border-radius:4px}
 .prompt-box{font-size:16.5px;line-height:1.65;background:var(--bg);border-radius:8px;padding:14px 16px;border:1px solid var(--line)}
 .outline{display:flex;flex-direction:column;gap:12px;font-size:15px}
 .outline h4{margin:0 0 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
@@ -230,27 +234,40 @@ const P2 = [
  ["Describe a problem you had using an electronic device","事件","sup",EVENT("What device it was and what went wrong"),["Why do electronic devices break so easily now?","Should companies make products easier to repair?","What do people do with old electronic devices?"]],
 ];
 
-// 寫作 Task 2 練習題（[題型, 題目]）
-const TYPES = {opinion:"同意／不同意",discuss:"兩方觀點＋己見",advdis:"優點／缺點",problem:"原因／解法",two:"雙問句"};
+// 寫作 Task 2：2026 年 10 月考生回憶真題（第三方整理 ieltswritingpractice.app，措辭可能與實際略有出入）
+// [題型, 題目, 考試週]
+const TYPES = {opinion:"同意／不同意",discuss:"兩方觀點＋己見",advdis:"優點／缺點",posneg:"正面／負面發展",problem:"原因／解法",two:"雙問句"};
 const W2 = [
- ["opinion","Some people believe that governments should spend more money on public parks and green spaces than on new housing in cities. To what extent do you agree or disagree?"],
- ["opinion","Historic buildings in cities should be preserved even if this slows down economic development. To what extent do you agree or disagree?"],
- ["opinion","Artificial intelligence will eventually replace most creative jobs, such as designers and writers. To what extent do you agree or disagree?"],
- ["opinion","University education should be free for all students. To what extent do you agree or disagree?"],
- ["opinion","Children should be taught practical skills such as cooking and managing money at school rather than academic subjects. To what extent do you agree or disagree?"],
- ["discuss","Some people think that people should live in high-rise apartment buildings to save land, while others think that houses with gardens are better for families. Discuss both views and give your own opinion."],
- ["discuss","Some people say that studying abroad is the best way to prepare for a career, while others believe students can gain the same benefits at home. Discuss both views and give your own opinion."],
- ["discuss","Some believe that public transport should be free to reduce traffic congestion, while others think users should pay for it. Discuss both views and give your own opinion."],
- ["discuss","Some people think technology has made people more sociable, while others believe it has made them more isolated. Discuss both views and give your own opinion."],
- ["advdis","More and more people are working from home instead of in offices. Do the advantages of this trend outweigh the disadvantages?"],
- ["advdis","In many cities, old industrial areas are being turned into shopping and entertainment districts. Do the advantages outweigh the disadvantages?"],
- ["advdis","Many young people now use social media as their main source of news. Do the advantages of this development outweigh the disadvantages?"],
- ["problem","Housing in many large cities has become too expensive for young people. What are the causes of this problem, and what solutions can you suggest?"],
- ["problem","Many cities suffer from serious noise pollution. What are the causes, and what measures can be taken to reduce it?"],
- ["problem","Fewer people are doing physical exercise in their free time. What are the reasons for this, and what can be done to encourage more people to exercise?"],
- ["two","Many people today prefer to buy new products rather than repair old ones. Why is this the case? Is this a positive or negative development?"],
- ["two","In many countries, more people are choosing to live alone. Why is this happening? Is it a positive or negative trend?"],
- ["two","Some cities are introducing car-free zones in their centres. Why are they doing this? Do you think it is a good idea?"],
+ ["advdis","Some cities have vehicle-free days when private cars, trucks, and motorcycles are banned from the city centre. People are encouraged to use public transportation such as buses, taxis, and metro on vehicle-free days. Do the advantages of having vehicle-free days outweigh the disadvantages?","10/19–10/25"],
+ ["problem","Nowadays people use bicycles less as a form of transport. Why is that? What can we do to encourage people to use bicycles more?","10/19–10/25"],
+ ["opinion","When asked to choose between a life without work and working most of the time, people would always choose not to work. Do you agree or disagree with this statement?","10/19–10/25"],
+ ["posneg","Organized tours to remote areas and communities are increasingly popular. Is it a positive or negative development for the local people and the environment?","10/19–10/25"],
+ ["discuss","Some people believe that studying at university or college is the best route to a successful career, while others believe that it is better to get a job straight after school. Discuss both views and give your opinion.","10/12–10/18"],
+ ["opinion","The best way for a country to prepare for the future is to invest more resources in its young people. To what extent do you agree or disagree?","10/12–10/18"],
+ ["discuss","Research has shown that the transportation of products and people is the main source of pollution. Some people believe the government should be in charge of this, while others believe it is the fault of individuals. Discuss both views and give your opinion.","10/12–10/18"],
+ ["opinion","Historical objects should be brought back to their country of origin. To what extent do you agree or disagree?","10/12–10/18"],
+ ["opinion","The best way to understand other cultures is to work for a multinational organisation. To what extent do you agree or disagree?","10/12–10/18"],
+ ["discuss","Some people think that language should be taught in small classes, while other people think the number of students in a language class does not matter. Discuss both views and give your opinion.","10/12–10/18"],
+ ["opinion","Caring for children is probably the most important job in any society. Because of this, all mothers and fathers should be required to take a course that prepares them to be good parents. To what extent do you agree or disagree with this view?","10/12–10/18"],
+ ["discuss","Some believe that the government should support artists like musicians, painters, and poets, while others argue that this is a misuse of funds. Discuss both views and give your own opinion.","10/12–10/18"],
+ ["opinion","Some people think employers should give their staff at least four weeks’ holiday per year to improve their job performance. To what extent do you agree or disagree with this statement?","10/12–10/18"],
+ ["advdis","In the past, people stored knowledge in books. Nowadays, people store knowledge on the internet. Do the advantages of this development outweigh the disadvantages?","10/12–10/18"],
+ ["posneg","Nowadays, sports is a big business with high earnings for professional sports people and companies involved both financially and in other ways. Is this a positive or negative development for sports?","10/12–10/18"],
+ ["opinion","Some people think that giving children opportunities to act and make decisions independently is important. To what extent do you agree or disagree?","10/12–10/18"],
+ ["discuss","Some people think that people should be given the right to use freshwater as they like. Others believe governments should strictly control the use of freshwater. Discuss both views and give your own opinion.","10/5–10/11"],
+ ["two","Competitiveness is seen as a positive quality for people to have in many societies today. How does this competitiveness affect individuals? Is it a positive or negative quality?","10/5–10/11"],
+ ["discuss","In many parts of the world, people do research on their family history. Some people believe that finding out about previous generations is a useful thing to do. However, others believe that it is better to focus on present and future generations. Discuss both views and give your opinion.","10/5–10/11"],
+ ["opinion","All companies should provide sports and social facilities to the local community. To what extent do you agree or disagree?","10/5–10/11"],
+ ["problem","Many offenders commit more crimes after serving their first punishment. Why is this happening, and what measures can be taken to tackle this problem?","10/5–10/11"],
+ ["opinion","Some people think it is more important to spend public money on promoting a healthy lifestyle in order to prevent illness than to spend it on the treatment for people who are already ill. To what extent do you agree or disagree?","10/5–10/11"],
+ ["problem","Many students find it harder to study when they are at university or college than when they were at school. Why is this? What can be done to solve the problem?","10/5–10/11"],
+ ["discuss","Some people believe that children should do organized activities in their free time while others believe that children should be free to do what they want to do in their free time. Discuss both views and give your opinion.","10/5–10/11"],
+ ["discuss","Some people think that the public health of a country can be improved if the government makes laws regarding nutritious food, but others think that it is a matter of personal choice and personal responsibility. Discuss both views and give your opinion.","10/1–10/4"],
+ ["two","These days more fathers stay at home and take care of their children while mothers go out to work. What could be the reasons for this? Is it a positive or negative development?","10/1–10/4"],
+ ["two","In the past, people used to travel to see the differences from their home country. However, the scenery in places around the world seems similar nowadays. What are the causes of these similarities? Do you think that the advantages of these similarities outweigh the disadvantages?","10/1–10/4"],
+ ["two","Ambition is a positive quality for people to have in society today. How important is it for people who want to succeed in life? Is it a positive or negative characteristic?","10/1–10/4"],
+ ["two","Today, people in many countries have to spend more and more time away from their families. Why is this happening? What effects does this have on the people themselves and on their families?","10/1–10/4"],
+ ["opinion","Nowadays celebrities are more famous for their glamour and wealth than for their achievements, and this sets a bad example for young people. To what extent do you agree or disagree with this statement?","10/1–10/4"],
 ];
 
 /* ---------- 狀態 ---------- */
@@ -648,7 +665,7 @@ const FIELDS = [
   ]],
 ];
 function wrPrompt() { return WR.sel === -1 ? store.get("customPrompt", "") : W2[WR.sel][1]; }
-function wrKey() { return "essay:" + (WR.sel === -1 ? "custom" : WR.sel); }
+function wrKey() { return "essay2:" + (WR.sel === -1 ? "custom" : WR.sel); }
 function renderWrFilters() {
   const f = $("#wr-filters"); f.replaceChildren();
   const chip = (k, l) => el("button", { class: "chip", "aria-pressed": String(WR.type === k), onclick: () => { WR.type = k; store.set("wrType", k); renderWrite(); } }, l);
@@ -658,7 +675,7 @@ function renderWrList() {
   const list = $("#wr-list"); list.replaceChildren();
   W2.forEach(([k, txt], i) => {
     if (WR.type !== "all" && WR.type !== k) return;
-    const saved = store.get("essay:" + i, null);
+    const saved = store.get("essay2:" + i, null);
     list.append(el("button", { class: "item", "aria-current": String(WR.sel === i), onclick: () => { WR.sel = i; WR.step = 0; store.set("wrSel", i); renderWrite(); } },
       el("span", { class: "dot " + (saved && saved.done ? "done" : "") }),
       el("span", { class: "t" }, txt.length > 70 ? txt.slice(0, 70) + "…" : txt)));
@@ -682,8 +699,14 @@ function renderWrPanel() {
     cp.addEventListener("input", () => store.set("customPrompt", cp.value));
     head.push(el("label", { class: "f", for: "custom-prompt" }, "題目"), cp);
   } else {
-    head.push(el("div", { class: "crumb" }, el("span", {}, "Task 2"), el("span", {}, "·"), el("span", {}, TYPES[W2[WR.sel][0]])),
-      el("div", { class: "prompt-box" }, wrPrompt()));
+    head.push(el("div", { class: "crumb" }, el("span", {}, "Task 2"), el("span", {}, "·"), el("span", {}, TYPES[W2[WR.sel][0]]), el("span", {}, "·"), el("span", {}, "考生回憶 " + W2[WR.sel][2])),
+      el("div", { class: "prompt-box exam" },
+        el("p", { class: "exam-h" }, "WRITING TASK 2"),
+        el("p", {}, "You should spend about 40 minutes on this task."),
+        el("p", {}, "Write about the following topic:"),
+        el("p", { class: "exam-q" }, wrPrompt()),
+        el("p", {}, "Give reasons for your answer and include any relevant examples from your own knowledge or experience."),
+        el("p", {}, "Write at least 250 words.")));
   }
   const clock = el("div", { class: "clock", style: "font-size:28px" }, "10:00");
   const timerRow = el("div", { class: "timer-row" }, clock,
