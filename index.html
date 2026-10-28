@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="雅思口說聽題練習（多國口音、考試語速、2026 年 9–12 月題庫）與寫作 Task 2 大綱訓練">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>雅思練習室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap">
+</head>
+<body>
+<style>
+/* Layout: 頂部分頁；左欄題目清單、右欄一次只練一題（手機時上下堆疊） */
+:root{
+  --bg:#f7f7f5; --surface:#ffffff; --fg:#26292b; --muted:#6c7172; --line:#dfe1dd;
+  --accent:#5f7a72; --accent-soft:#e3ebe7; --hard:#b0756b; --hard-soft:#f3e4e0; --done:#6f8f6a;
+  --f-display:"Bricolage Grotesque","Noto Sans TC",system-ui,sans-serif;
+  --f-body:"Noto Sans TC",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1b1d1e; --surface:#232627; --fg:#e7e8e5; --muted:#9ba09e; --line:#363a3a;
+  --accent:#8fb0a6; --accent-soft:#2c3936; --hard:#d39a8f; --hard-soft:#3d2c29; --done:#9bbd94; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1b1d1e; --surface:#232627; --fg:#e7e8e5; --muted:#9ba09e; --line:#363a3a;
+  --accent:#8fb0a6; --accent-soft:#2c3936; --hard:#d39a8f; --hard-soft:#3d2c29; --done:#9bbd94; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-weight:700;font-size:28px;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 0}
+.countdown{font-family:var(--f-mono);font-size:13px;color:var(--muted);text-align:right}
+.countdown b{color:var(--accent);font-size:20px}
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font:inherit;font-weight:500;color:var(--muted);cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+aside{background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;max-height:78vh;min-width:0}
+@media (max-width:820px){aside{max-height:300px}}
+.filters{display:flex;flex-wrap:wrap;gap:6px;padding:12px;border-bottom:1px solid var(--line)}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:3px 11px;font:inherit;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.list{overflow-y:auto;padding:6px}
+.group-h{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 8px 4px}
+.item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:7px 8px;font:inherit;font-size:14px;color:var(--fg);cursor:pointer}
+.item:hover{background:var(--accent-soft)}
+.item[aria-current="true"]{background:var(--accent-soft);font-weight:500}
+.item .t{flex:1;min-width:0}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;border:1px solid var(--line)}
+.dot.done{background:var(--done);border-color:var(--done)} .dot.hard{background:var(--hard);border-color:var(--hard)}
+.tag{font-size:11px;font-weight:500;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 5px;flex:none}
+main.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.crumb{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.q{font-family:var(--f-display);font-weight:500;font-size:26px;line-height:1.3;margin:0;text-wrap:balance}
+.cue{border-left:3px solid var(--accent);padding:4px 0 4px 16px}
+.cue p{margin:0 0 4px;color:var(--muted)} .cue ul{margin:0;padding-left:20px}
+.timer-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.clock{font-family:var(--f-mono);font-size:44px;font-variant-numeric:tabular-nums;line-height:1}
+.clock.warn{color:var(--hard)}
+.phase{font-size:13px;color:var(--muted)}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s linear}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button.b{font:inherit;font-size:14px;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+button.b.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+button.b.hardbtn[aria-pressed="true"]{background:var(--hard-soft);border-color:var(--hard);color:var(--hard)}
+button.b.donebtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--done);color:var(--done)}
+button.b:disabled{opacity:.45;cursor:default}
+button:focus-visible,textarea:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+label.f span.hint{font-size:12px;opacity:.85}
+textarea,input[type=text],select{font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:100%}
+textarea{resize:vertical;min-height:64px;line-height:1.55}
+.feedback{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px 16px;white-space:pre-wrap;font-size:14px;line-height:1.7}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.step{font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:none;font-family:inherit;cursor:pointer}
+.step[aria-current="true"]{border-color:var(--accent);color:var(--accent);font-weight:500}
+fieldset{border:1px solid var(--line);border-radius:10px;padding:14px 16px 16px;margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+legend{font-weight:700;font-size:14px;padding:0 6px}
+.prompt-box{font-size:16.5px;line-height:1.65;background:var(--bg);border-radius:8px;padding:14px 16px;border:1px solid var(--line)}
+.outline{display:flex;flex-direction:column;gap:12px;font-size:15px}
+.outline h4{margin:0 0 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.outline p{margin:0}
+.rec{border-top:1px solid var(--line);padding:12px 0;display:flex;flex-direction:column;gap:4px}
+.rec .meta{font-size:12px;color:var(--muted);font-family:var(--f-mono)}
+.rec details summary{cursor:pointer;font-weight:500}
+.status{font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>雅思練習室</h1>
+      <p class="sub">口說一題一題練 · 寫作先寫立場和每段句子 · 題庫：2026 年 9–12 月</p>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-speak" aria-selected="true" data-tab="speak">口說</button>
+    <button role="tab" id="tab-write" aria-selected="false" data-tab="write">寫作</button>
+    <button role="tab" id="tab-log" aria-selected="false" data-tab="log">紀錄</button>
+  </nav>
+
+  <section id="view-speak" class="grid">
+    <aside>
+      <div class="filters" id="sp-filters"></div>
+      <div class="list" id="sp-list"></div>
+    </aside>
+    <main class="panel" id="sp-panel"></main>
+  </section>
+
+  <section id="view-write" class="grid" hidden>
+    <aside>
+      <div class="filters" id="wr-filters"></div>
+      <div class="list" id="wr-list"></div>
+    </aside>
+    <main class="panel" id="wr-panel"></main>
+  </section>
+
+  <section id="view-log" hidden>
+    <main class="panel" id="log-panel"></main>
+  </section>
+</div>
+
+<script>
+/* ---------- 題庫資料 ---------- */
+// 題目依第三方整理的 2026 年 9–12 月題庫主題重寫，實際考試措辭可能不同
+const P1 = [
+ ["Work or studies","must",["Do you work or are you a student?","Why did you choose your major?","What is the most interesting part of your studies?","What do you plan to do after you graduate?"]],
+ ["Home / accommodation","must",["Do you live in a house or an apartment?","Which room do you like most in your home?","What would you like to change about your home?","Do you plan to live there for a long time?"]],
+ ["Hometown","must",["Where is your hometown?","What is your hometown famous for?","Has your hometown changed much in recent years?","Would you like to live there in the future?"]],
+ ["The area you live in","must",["Do you like the area you live in?","What facilities are there near your home?","Is it a quiet or a busy area?","How could your area be improved?"]],
+ ["The city you live in","must",["Which city do you live in now?","What do you like most about this city?","Is public transport convenient there?","Would you recommend this city to visitors?"]],
+ ["Travelling","new",["Do you like travelling?","Who do you usually travel with?","What kind of places do you like to visit?","Is there a place you would like to travel to in the future?"]],
+ ["Rubbish and recycling","new",["Do you recycle at home?","Is it easy to recycle where you live?","Did you learn about recycling at school?","What could people do to produce less rubbish?"]],
+ ["Tiredness","new",["When do you usually feel tired?","What do you do when you feel tired?","Do you feel more tired now than when you were younger?","Do you think students today are more tired than before?"]],
+ ["Shoes","new",["Do you like buying shoes?","What kind of shoes do you usually wear?","Have you ever bought shoes online?","Do you prefer comfortable shoes or fashionable shoes?"]],
+ ["Politeness","new",["Do you think you are a polite person?","How do people show politeness in your culture?","Who taught you to be polite?","Are people today less polite than in the past?"]],
+ ["Fruit and vegetables","new",["Do you eat a lot of fruit and vegetables?","What is your favourite fruit?","Did you like vegetables when you were a child?","Is it expensive to buy fresh fruit where you live?"]],
+ ["Advertisement","new",["Do you pay attention to advertisements?","Where do you usually see advertisements?","Have you ever bought something because of an advert?","Do you think there are too many adverts today?"]],
+ ["Paper","new",["Do you use a lot of paper in daily life?","Do you prefer reading on paper or on a screen?","Is paper still important for students?","How can people use less paper?"]],
+ ["Secondary school","new",["Where did you go to secondary school?","What was your favourite subject there?","Do you still keep in touch with your classmates?","What did you dislike about secondary school?"]],
+ ["Name","new",["What is your full name?","Does your name have a special meaning?","Who gave you your name?","Would you like to change your name?"]],
+ ["Opportunities","new",["What opportunities do you have in your studies or work now?","Have you ever missed a good opportunity?","Do young people today have more opportunities than before?","How do you usually prepare for a new opportunity?"]],
+ ["Music","ret",["What kind of music do you like?","When do you usually listen to music?","Did you learn to play an instrument as a child?","Has your taste in music changed over time?"]],
+ ["Teachers","ret",["Do you remember your first teacher?","What makes a good teacher?","Would you like to be a teacher?","Have you ever had a teacher who changed your life?"]],
+ ["Social media","ret",["Which social media apps do you use?","How much time do you spend on social media each day?","What do you usually post?","Do you think social media is good for young people?"]],
+ ["Tidiness","ret",["Are you a tidy person?","How often do you clean your room?","Do you think it is important to keep your desk tidy?","Were you tidy when you were a child?"]],
+ ["Websites","ret",["What websites do you visit most often?","Have you ever made your own website?","What makes a website easy to use?","Do you prefer using apps or websites?"]],
+ ["Watch","ret",["Do you wear a watch?","Have you ever received a watch as a gift?","Why do some people wear expensive watches?","Do you think watches will disappear in the future?"]],
+ ["Shopping","ret",["Do you enjoy shopping?","Do you prefer shopping online or in stores?","What was the last thing you bought?","Do you usually shop alone or with others?"]],
+ ["Cars","ret",["Do you have a car?","Do you like travelling by car?","Is driving common where you live?","Would you like to buy an electric car?"]],
+ ["Public gardens and parks","ret",["Do you often go to parks?","What do people usually do in parks in your city?","Was there a park near your home when you were young?","How could parks in your city be improved?"]],
+ ["Science","ret",["Did you like science at school?","Which science subject interests you most?","Do you watch science programmes?","How does science affect your daily life?"]],
+ ["Mirrors","ret",["Do you often look in the mirror?","Do you have many mirrors at home?","Have you ever bought a mirror?","Why do some buildings use mirrors or reflective glass?"]],
+ ["Outer space and stars","ret",["Do you like looking at the stars?","Is it easy to see stars where you live?","Would you like to travel into space?","Did you learn about space as a child?"]],
+ ["Singing","ret",["Do you like singing?","Have you ever taken singing lessons?","Is karaoke popular in your country?","Do you think everyone can learn to sing well?"]],
+ ["Clothing","ret",["What kind of clothes do you usually wear?","Do you wear different clothes at weekends?","Do you care about fashion?","Where do you usually buy clothes?"]],
+ ["Jokes & comedies","ret",["Do you like watching comedies?","Are you good at telling jokes?","What makes you laugh?","Do people in your country share jokes online?"]],
+ ["Headphones","ret",["Do you use headphones?","What do you use headphones for?","Do you prefer wireless or wired headphones?","Is it rude to wear headphones while talking to someone?"]],
+ ["Morning time","ret",["Are you a morning person?","What do you usually do in the morning?","Do you eat breakfast every day?","Is your morning routine different at weekends?"]],
+ ["Feeling bored","sup",["When do you usually feel bored?","What do you do when you feel bored?","Did you often feel bored as a child?","Do you think feeling bored can be useful?"]],
+];
+
+// [標題, 類別, 新/保留, 提示, Part 3 追問]
+const PERSON = n => ["Who this person is","How you know this person",n,"And explain how you feel about this person"];
+const EVENT = (a,b) => ["When and where it happened","Who you were with",a,b||"And explain how you felt about it"];
+const PLACE = (a,b) => ["Where it is","When you went there",a,b||"And explain how you feel about this place"];
+const THING = (a,b) => ["What it is","When and how you came across it",a,b||"And explain why you feel this way about it"];
+const P2 = [
+ ["Describe a person who did something difficult and succeeded","人物","new",PERSON("What difficult thing they did and how they succeeded"),["What qualities do people need to overcome difficulties?","Is success more about hard work or luck?","Should parents let children face difficulties on their own?"]],
+ ["Describe a happy person you know","人物","new",PERSON("What this person usually does"),["What makes people happy in your country?","Are people today happier than in the past?","Can money buy happiness?"]],
+ ["Describe a person who is well organized","人物","new",PERSON("How this person organizes things"),["Why are some people more organized than others?","Is being organized important at work?","Can technology help people become more organized?"]],
+ ["Describe a person who likes taking photos","人物","new",PERSON("What kind of photos this person takes"),["Why do people take so many photos today?","Are professional photographers still needed?","Do photos help people remember the past?"]],
+ ["Describe an older person you admire","人物","new",PERSON("What this person has done"),["What can young people learn from older people?","Do older people get enough respect today?","How has the role of grandparents changed?"]],
+ ["Describe a person who is good at making things by hand","人物","new",PERSON("What this person makes"),["Are handmade things more valuable than machine-made ones?","Do children today learn practical skills?","Will handcrafts disappear in the future?"]],
+ ["Describe a person who studies and loves history","人物","new",PERSON("What kind of history this person likes"),["Why is it important to learn history?","How can museums attract young people?","Should old buildings be preserved or replaced?"]],
+ ["Describe a person who taught you a new skill","人物","new",PERSON("What skill they taught you and how"),["What is the best way to learn a new skill?","Is it better to learn from a teacher or from the internet?","Which skills will be important in the future?"]],
+ ["Describe a popular person you know","人物","new",PERSON("Why this person is popular"),["What makes someone popular at school or work?","Is it important to be popular?","Why do some celebrities become popular very quickly?"]],
+ ["Describe a sportsperson you admire","人物","new",PERSON("What this person has achieved"),["Should top athletes be paid so much?","Are sports stars good role models?","Why do some countries win more medals?"]],
+ ["Describe a person who has healthy habits and a regular routine","人物","new",PERSON("What their habits and routine are"),["Why is it hard for people to keep healthy habits?","Should the government encourage healthy lifestyles?","Do young people sleep enough today?"]],
+ ["Describe a noisy place you have been to","地點","new",PLACE("Why it was noisy"),["Is noise pollution a serious problem in cities?","How can city planners reduce noise?","Do young people mind noise less than older people?"]],
+ ["Describe a natural place in your city","地點","new",PLACE("What you can do there"),["Why do cities need natural spaces?","Should cities build more parks or more housing?","How can people in cities stay connected with nature?"]],
+ ["Describe a crowded place you have been to","地點","new",PLACE("Why it was crowded"),["Why do people go to crowded places?","How can cities manage crowds better?","Will cities become more crowded in the future?"]],
+ ["Describe a short trip that you did not enjoy","地點","new",PLACE("What happened on the trip","And explain why you did not enjoy it"),["What makes a trip enjoyable?","Do people today travel more than before?","Is it better to plan a trip carefully or travel spontaneously?"]],
+ ["Describe a building you enjoy visiting","地點","new",PLACE("What the building looks like","And explain why you enjoy visiting it"),["What makes a building attractive?","Should new buildings match the style of old ones?","How do public buildings affect people's daily lives?"]],
+ ["Describe your least favourite movie","物品","new",THING("What the movie is about","And explain why you did not like it"),["Why do some films become popular despite bad reviews?","Do people trust online film reviews?","Will cinemas survive streaming services?"]],
+ ["Describe an exciting book you have read","物品","new",THING("What the book is about"),["Do young people read less than before?","Are e-books better than paper books?","Should schools require students to read novels?"]],
+ ["Describe an important decision you made that turned out well","事件","new",EVENT("What the decision was and why you made it","And explain why it turned out well"),["Who should young people ask for advice?","Do people make better decisions when they are older?","Is it better to decide quickly or slowly?"]],
+ ["Describe a time you watched a famous person being interviewed","事件","new",EVENT("Who was interviewed and what they talked about"),["Why are people interested in celebrities' lives?","Do celebrities have a responsibility to society?","Are online interviews replacing TV interviews?"]],
+ ["Describe a time you saved money for something special","事件","new",EVENT("What you saved for and how you saved"),["Should children be taught to save money?","Why do some people find it hard to save?","Is it better to save or to spend on experiences?"]],
+ ["Describe a skill you learned as a child","事件","new",EVENT("What the skill was and who taught you","And explain how this skill helps you now"),["What skills should children learn at a young age?","Do children today have too many after-school classes?","Is it easier for children to learn than adults?"]],
+ ["Describe a time you received good service in a shop","事件","new",EVENT("What you bought and what the staff did"),["What makes good customer service?","Will robots replace shop assistants?","Do people complain more about service today?"]],
+ ["Describe an enjoyable evening you spent with friends","事件","new",EVENT("What you did together"),["How do young people usually spend time with friends?","Is it harder to make friends as an adult?","Has technology changed friendships?"]],
+ ["Describe an activity that you think was a waste of time","事件","new",EVENT("What the activity was and why you did it","And explain why you think it was a waste of time"),["Why do people waste time?","Is social media a waste of time?","How can people manage their time better?"]],
+ ["Describe a party that impressed you","事件","new",EVENT("What the party was for and what happened"),["Why do people hold parties?","Are parties today different from those in the past?","Should companies organize parties for employees?"]],
+ ["Describe a time you helped someone solve a problem","事件","new",EVENT("What the problem was and how you helped"),["Should people always help strangers?","Do people today help each other less than before?","What problems do young people usually ask for help with?"]],
+ ["Describe a person who enjoys growing plants","人物","ret",PERSON("What plants they grow"),["Why do people in cities like growing plants?","Should schools teach children to grow plants?","Can green roofs and vertical gardens improve cities?"]],
+ ["Describe a childhood friend","人物","ret",PERSON("What you did together"),["Is it important to keep childhood friends?","How do children make friends?","Are online friends real friends?"]],
+ ["Describe a person who wants to work in medicine","人物","ret",PERSON("Why they want this career"),["Why do many young people want to be doctors?","Should doctors earn more than other professionals?","How will technology change healthcare?"]],
+ ["Describe a person who runs a successful business","人物","ret",PERSON("What the business is"),["What qualities does a business owner need?","Is it better to work for yourself or a company?","Should schools teach business skills?"]],
+ ["Describe a person who is good at learning languages","人物","ret",PERSON("Which languages they speak and how they learned"),["Why do people learn foreign languages?","Is it better to learn a language at a young age?","Will translation apps replace language learning?"]],
+ ["Describe a tall building you like or dislike","地點","ret",PLACE("What it looks like","And explain why you like or dislike it"),["Why do cities build skyscrapers?","Are tall buildings good places to live?","How do tall buildings change a city's character?"]],
+ ["Describe a boring place you have visited","地點","ret",PLACE("What you did there","And explain why it was boring"),["What makes a place interesting to tourists?","Should old towns be redeveloped?","Do young people and old people like different places?"]],
+ ["Describe a place you would recommend to visitors","地點","ret",PLACE("What visitors can do there","And explain why you would recommend it"),["How does tourism affect local people?","Should famous places limit the number of visitors?","Do travel apps make tourism better?"]],
+ ["Describe a home you like to visit but would not want to live in","地點","ret",PLACE("Who lives there and what it is like","And explain why you would not want to live there"),["What makes a home comfortable?","Do people prefer houses or apartments in your country?","How will homes change in the future?"]],
+ ["Describe an interesting video you watched","物品","ret",THING("What the video was about"),["Why are short videos so popular?","Can people learn useful things from videos?","Should children's screen time be limited?"]],
+ ["Describe a new law you would like to introduce","物品","ret",THING("What the law would be","And explain why you think it is needed"),["Why do some people break laws?","Are fines an effective punishment?","Who should decide new laws?"]],
+ ["Describe a live sports event you watched","事件","ret",EVENT("What the event was and what happened"),["Why do people enjoy watching live sports?","Should big sports events be held in developing countries?","Is watching sport on TV better than in person?"]],
+ ["Describe a food you eat on special occasions","物品","ret",THING("What the food is and how it is made","And explain why it is eaten on special occasions"),["Are traditional foods disappearing?","Why do people eat together on festivals?","Is fast food changing family meals?"]],
+ ["Describe an advertisement featuring a celebrity","物品","ret",THING("What product it advertised and who appeared in it"),["Why do companies use celebrities in adverts?","Should there be limits on adverts for children?","Do people trust influencer recommendations?"]],
+ ["Describe a story or book about animals","物品","ret",THING("What happens in the story"),["Why do children like animal stories?","Should zoos exist?","How can people protect wild animals?"]],
+ ["Describe an environmental law you know about","物品","ret",THING("What the law says and where it applies","And explain whether you think it works"),["Is the government or the individual more responsible for the environment?","Should plastic bags be banned?","Can cities grow without harming nature?"]],
+ ["Describe a long-term goal you have","物品","ret",THING("What the goal is and when you set it","And explain why this goal matters to you"),["Is it important to set long-term goals?","Do young people today have clear goals?","Should parents set goals for their children?"]],
+ ["Describe a piece of local news you heard","物品","ret",THING("What the news was about","And explain why it interested you"),["Do people prefer local or international news?","Can people trust news on social media?","Will newspapers disappear?"]],
+ ["Describe a time you got up very early","事件","ret",EVENT("Why you got up early and what you did"),["Are morning people more productive?","Should schools start later?","How do people's sleep habits change with age?"]],
+ ["Describe a time you had to change your plan","事件","ret",EVENT("What the plan was and why it changed"),["Is it important to be flexible?","Do people plan less than in the past?","How should people deal with unexpected changes?"]],
+ ["Describe a time you worked in a group","事件","ret",EVENT("What the group did and what your role was"),["What makes teamwork successful?","Should schools give more group projects?","Is it better to work alone or in a team?"]],
+ ["Describe a time you had a problem with a piece of technology","事件","ret",EVENT("What the problem was and how you solved it"),["Do people rely too much on technology?","Should older people learn new technology?","Will technology make life simpler or more complicated?"]],
+ ["Describe a time you sent a message but got no reply","事件","ret",EVENT("Who you sent it to and why","And explain how you felt about not getting a reply"),["Is it rude not to reply to messages?","Do people communicate better now than before?","Do you prefer messaging or calling?"]],
+ ["Describe a time you changed your opinion about something important","事件","ret",EVENT("What your opinion was and why it changed"),["Why do people change their opinions?","Do older people change their minds less easily?","Can the media change people's opinions?"]],
+ ["Describe a recent change in your life","事件","ret",EVENT("What the change was and why it happened"),["Do people like changes?","What big changes happen in young people's lives?","Has your city changed a lot recently?"]],
+ ["Describe a person who met difficulties but still succeeded","人物","sup",PERSON("What difficulties they faced and how they succeeded"),["Do failures help people succeed later?","Who should support people facing difficulties?","Are young people today afraid of failure?"]],
+ ["Describe a problem you had using an electronic device","事件","sup",EVENT("What device it was and what went wrong"),["Why do electronic devices break so easily now?","Should companies make products easier to repair?","What do people do with old electronic devices?"]],
+];
+
+// 寫作 Task 2 練習題（[題型, 題目]）
+const TYPES = {opinion:"同意／不同意",discuss:"兩方觀點＋己見",advdis:"優點／缺點",problem:"原因／解法",two:"雙問句"};
+const W2 = [
+ ["opinion","Some people believe that governments should spend more money on public parks and green spaces than on new housing in cities. To what extent do you agree or disagree?"],
+ ["opinion","Historic buildings in cities should be preserved even if this slows down economic development. To what extent do you agree or disagree?"],
+ ["opinion","Artificial intelligence will eventually replace most creative jobs, such as designers and writers. To what extent do you agree or disagree?"],
+ ["opinion","University education should be free for all students. To what extent do you agree or disagree?"],
+ ["opinion","Children should be taught practical skills such as cooking and managing money at school rather than academic subjects. To what extent do you agree or disagree?"],
+ ["discuss","Some people think that people should live in high-rise apartment buildings to save land, while others think that houses with gardens are better for families. Discuss both views and give your own opinion."],
+ ["discuss","Some people say that studying abroad is the best way to prepare for a career, while others believe students can gain the same benefits at home. Discuss both views and give your own opinion."],
+ ["discuss","Some believe that public transport should be free to reduce traffic congestion, while others think users should pay for it. Discuss both views and give your own opinion."],
+ ["discuss","Some people think technology has made people more sociable, while others believe it has made them more isolated. Discuss both views and give your own opinion."],
+ ["advdis","More and more people are working from home instead of in offices. Do the advantages of this trend outweigh the disadvantages?"],
+ ["advdis","In many cities, old industrial areas are being turned into shopping and entertainment districts. Do the advantages outweigh the disadvantages?"],
+ ["advdis","Many young people now use social media as their main source of news. Do the advantages of this development outweigh the disadvantages?"],
+ ["problem","Housing in many large cities has become too expensive for young people. What are the causes of this problem, and what solutions can you suggest?"],
+ ["problem","Many cities suffer from serious noise pollution. What are the causes, and what measures can be taken to reduce it?"],
+ ["problem","Fewer people are doing physical exercise in their free time. What are the reasons for this, and what can be done to encourage more people to exercise?"],
+ ["two","Many people today prefer to buy new products rather than repair old ones. Why is this the case? Is this a positive or negative development?"],
+ ["two","In many countries, more people are choosing to live alone. Why is this happening? Is it a positive or negative trend?"],
+ ["two","Some cities are introducing car-free zones in their centres. Why are they doing this? Do you think it is a good idea?"],
+];
+
+/* ---------- 狀態 ---------- */
+const EXAM = new Date("2026-11-25T08:30:00+08:00");
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, "");
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null) n.append(k.nodeType ? k : document.createTextNode(k));
+  return n;
+};
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("ielts:" + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("ielts:" + k, JSON.stringify(v)); } catch {} },
+};
+let marks = store.get("marks", {});           // qid -> "done" | "hard"
+let db = null, sample = null;
+
+const LABEL = {new:"新題",ret:"保留",must:"必考",sup:"補充"};
+const SP = { mode: store.get("spMode", "p2"), only: store.get("spOnly", "all"), sel: null, step: 0, phase: "idle", listen: store.get("listen", true) };
+
+/* ---------- 聽題模式：題目先藏起來，用唸的 ---------- */
+const canSpeak = "speechSynthesis" in window;
+let userActed = false, lastSpokenKey = "";
+// 雅思考官來自各英語國家，考試用正常語速
+const ACCENTS = [["mix", "口音隨機輪換"], ["en-GB", "英國"], ["en-AU", "澳洲"], ["en-US", "美國"], ["en-CA", "加拿大"], ["en-IE", "愛爾蘭"], ["en-NZ", "紐西蘭"], ["en-IN", "印度"], ["en-ZA", "南非"], ["en-SG", "新加坡"]];
+const accentName = lang => (ACCENTS.find(a => a[0].toLowerCase() === lang.replace("_", "-").toLowerCase()) || [0, lang])[1];
+let voices = [], voiceByKey = {};
+SP.accent = store.get("accent", "mix");
+SP.rate = store.get("rate", 1);
+function loadVoices() { voices = canSpeak ? speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang)) : []; }
+if (canSpeak) { loadVoices(); speechSynthesis.addEventListener("voiceschanged", () => { loadVoices(); if (SP.listen) renderSpFilters(); }); }
+function voiceFor(key) {
+  if (SP.accent !== "mix") {
+    const pool = voices.filter(v => v.lang.replace("_", "-").toLowerCase() === SP.accent.toLowerCase());
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : voices.find(v => /en[-_]GB/i.test(v.lang)) || voices[0];
+  }
+  if (!voiceByKey[key] || !voices.includes(voiceByKey[key])) {
+    // 先隨機選口音，再選該口音裡的一個聲音，避免美國聲音最多而一直抽到美國腔
+    const langs = [...new Set(voices.map(v => v.lang.replace("_", "-").toLowerCase()))];
+    const lang = langs[Math.floor(Math.random() * langs.length)];
+    const pool = voices.filter(v => v.lang.replace("_", "-").toLowerCase() === lang);
+    voiceByKey[key] = pool[Math.floor(Math.random() * pool.length)];
+  }
+  return voiceByKey[key];
+}
+for (const ev of ["pointerdown", "keydown"]) document.addEventListener(ev, () => { userActed = true; }, { capture: true });
+function say(text, key, info) {
+  if (!canSpeak) return;
+  speechSynthesis.cancel();
+  if (!voices.length) loadVoices();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = voiceFor(key);
+  if (v) u.voice = v;
+  u.lang = v ? v.lang : "en-GB";
+  u.rate = SP.rate;
+  speechSynthesis.speak(u);
+  if (info) info.textContent = v ? `這題口音：${accentName(v.lang)}` : "";
+}
+const EXAMINER = {
+  1: "真實考試 Part 1：聽不清楚可以請考官重複一次，但考官不會換句話解釋。練習時盡量只聽一到兩次。",
+  2: "真實考試 Part 2 會拿到寫著題目的題卡；這裡先用聽的是加強聽力，聽完可以打開題卡再準備。",
+  3: "真實考試 Part 3：可以請考官換個說法（Could you rephrase that?），不會扣分。",
+};
+function qBlock(nodes, spoken, part) {
+  const key = `${SP.mode}|${SP.sel}|${SP.step}`;
+  const changed = key !== lastSpokenKey; lastSpokenKey = key;
+  const info = el("span", { class: "status" });
+  if (!SP.listen || !canSpeak) {
+    return el("div", { style: "display:flex;flex-direction:column;gap:12px" }, nodes,
+      SP.listen && !canSpeak ? el("p", { class: "note" }, "這個瀏覽器不能唸題目，所以直接顯示。") : null);
+  }
+  if (changed && userActed) setTimeout(() => say(spoken, key, info), 150);
+  const box = el("div", { hidden: true, style: "display:flex;flex-direction:column;gap:12px" }, nodes);
+  const showBtn = el("button", { class: "b", onclick: () => { box.hidden = !box.hidden; showBtn.textContent = box.hidden ? "顯示題目" : "隱藏題目"; } }, "顯示題目");
+  return el("div", { style: "display:flex;flex-direction:column;gap:12px" },
+    el("div", { class: "btns", style: "align-items:center" }, el("button", { class: "b", onclick: () => say(spoken, key, info) }, "▶ 播放題目"), showBtn, info),
+    el("p", { class: "note" }, EXAMINER[part]),
+    box);
+}
+
+/* ---------- 共用：計時器 ---------- */
+let tick = null;
+function stopTimer() { clearInterval(tick); tick = null; }
+function runTimer({ seconds, countUp = false, target = 0, onEnd, render }) {
+  stopTimer();
+  let t = 0;
+  render(countUp ? 0 : seconds, 0);
+  tick = setInterval(() => {
+    t++;
+    if (countUp) { render(t, target ? Math.min(t / target, 1) : 0); }
+    else {
+      const left = seconds - t;
+      render(Math.max(left, 0), t / seconds);
+      if (left <= 0) { stopTimer(); onEnd && onEnd(); }
+    }
+  }, 1000);
+}
+const mmss = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+/* ---------- 口說 ---------- */
+function speakItems() {
+  if (SP.mode === "p1") return P1.map(([t, k, qs], i) => ({ id: "p1-" + i, title: t, kind: k, qs }));
+  return P2.map(([t, cat, k, bullets, p3], i) => ({ id: "p2-" + i, title: t.replace(/^Describe /, ""), full: t, cat, kind: k, bullets, p3 }));
+}
+function passFilter(it) {
+  if (SP.only === "new") return it.kind === "new";
+  if (SP.only === "hard") return Object.keys(marks).some(k => k.startsWith(it.id + ":") && marks[k] === "hard") || marks[it.id] === "hard";
+  if (SP.only === "todo") return !marks[it.id];
+  return true;
+}
+function renderSpFilters() {
+  const f = $("#sp-filters"); f.replaceChildren();
+  const chip = (label, on, fn) => el("button", { class: "chip", "aria-pressed": String(on), onclick: fn }, label);
+  f.append(
+    chip("Part 1", SP.mode === "p1", () => { SP.mode = "p1"; store.set("spMode", "p1"); SP.sel = null; renderSpeak(); }),
+    chip("Part 2 + 3", SP.mode === "p2", () => { SP.mode = "p2"; store.set("spMode", "p2"); SP.sel = null; renderSpeak(); }),
+  );
+  f.append(chip("聽題模式", SP.listen, () => { SP.listen = !SP.listen; store.set("listen", SP.listen); if (canSpeak) speechSynthesis.cancel(); renderSpeak(); }));
+  if (SP.listen && canSpeak) {
+    const have = new Set(voices.map(v => v.lang.replace("_", "-").toLowerCase()));
+    const acc = el("select", { id: "accent", "aria-label": "口音", style: "width:auto;font-size:13px;padding:3px 8px", onchange: e => { SP.accent = e.target.value; store.set("accent", SP.accent); voiceByKey = {}; } },
+      ACCENTS.filter(([k]) => k === "mix" || have.has(k.toLowerCase())).map(([k, l]) => el("option", { value: k }, l)));
+    acc.value = SP.accent; if (acc.value !== SP.accent) acc.value = "mix";
+    const rate = el("select", { id: "rate", "aria-label": "語速", style: "width:auto;font-size:13px;padding:3px 8px", onchange: e => { SP.rate = Number(e.target.value); store.set("rate", SP.rate); } },
+      el("option", { value: "1" }, "考試語速"), el("option", { value: "1.1" }, "稍快"), el("option", { value: "0.85" }, "放慢"));
+    rate.value = String(SP.rate);
+    f.append(acc, rate);
+  }
+  f.append(el("span", { style: "flex-basis:100%;height:0" }));
+  for (const [k, l] of [["all", "全部"], ["new", "只看新題"], ["todo", "還沒練"], ["hard", "不熟"]])
+    f.append(chip(l, SP.only === k, () => { SP.only = k; store.set("spOnly", k); renderSpeak(); }));
+}
+function renderSpList() {
+  const list = $("#sp-list"); list.replaceChildren();
+  const items = speakItems().filter(passFilter);
+  const groups = SP.mode === "p1" ? [["必考", "must"], ["新題", "new"], ["保留題", "ret"], ["補充", "sup"]] : [["人物", "人物"], ["地點", "地點"], ["物品", "物品"], ["事件", "事件"]];
+  for (const [h, key] of groups) {
+    const g = items.filter(it => (SP.mode === "p1" ? it.kind : it.cat) === key);
+    if (!g.length) continue;
+    list.append(el("div", { class: "group-h" }, `${h} · ${g.length}`));
+    for (const it of g) {
+      const st = marks[it.id];
+      list.append(el("button", { class: "item", "aria-current": String(SP.sel === it.id), onclick: () => { SP.sel = it.id; SP.step = 0; SP.phase = "idle"; stopTimer(); renderSpeak(); } },
+        el("span", { class: "dot " + (st || "") }),
+        el("span", { class: "t" }, it.title),
+        SP.mode === "p2" && it.kind === "new" ? el("span", { class: "tag" }, "新") : null));
+    }
+  }
+  if (!items.length) list.append(el("p", { class: "note", style: "padding:12px" }, SP.only === "hard" ? "還沒有標成「不熟」的題目。" : "這個篩選沒有題目。"));
+}
+function currentSpeakItem() {
+  const items = speakItems();
+  return items.find(i => i.id === SP.sel) || items.filter(passFilter)[0] || items[0];
+}
+function setMark(id, v) {
+  if (marks[id] === v) delete marks[id]; else marks[id] = v;
+  store.set("marks", marks);
+  if (db) db.doc("progress/speaking").set({ marks, updatedAt: Date.now() }).catch(() => {});
+}
+function nextTopic() {
+  const items = speakItems().filter(passFilter);
+  const i = items.findIndex(x => x.id === SP.sel);
+  const nx = items[(i + 1) % items.length];
+  if (nx) { SP.sel = nx.id; SP.step = 0; SP.phase = "idle"; stopTimer(); renderSpeak(); }
+}
+function answerArea(qid, question, part) {
+  const draftKey = "draft:" + qid;
+  const ta = el("textarea", { id: "ans-" + qid, rows: "4", placeholder: "可貼上手機錄音轉成的文字，或寫下關鍵字" });
+  ta.value = store.get(draftKey, "");
+  ta.addEventListener("input", () => store.set(draftKey, ta.value));
+  const fb = el("div", { class: "feedback", hidden: true });
+  const status = el("span", { class: "status" });
+  const askBtn = el("button", { class: "b", onclick: async () => {
+    if (!ta.value.trim()) { status.textContent = "先貼上逐字稿，才能請 Claude 回饋。"; return; }
+    if (!sample) { status.textContent = "這個畫面沒有開放 Claude 回饋，可以把逐字稿貼到對話裡。"; return; }
+    askBtn.disabled = true; fb.hidden = false; fb.textContent = "Claude 正在看…";
+    try {
+      const prompt = `你是資深雅思口說考官。考生目標 7 分，平常約 6 分。以下是 Part ${part} 的題目與考生回答逐字稿。
+請用繁體中文回覆，格式：
+1. 四項評分（流利與連貫、詞彙、文法、發音只能從逐字稿推測就註明「無法判斷」）各估一個分數並一句理由。
+2. 最該改的 2 點，引用原句並給改寫。
+3. 一個 7 分版本的示範回答（英文，長度與 Part ${part} 相符）。
+題目：${question}
+逐字稿：${ta.value}`;
+      const r = await sample(prompt, { onText: u => { fb.textContent = u.text; } });
+      fb.textContent = r.text;
+    } catch (e) { fb.textContent = e && e.code === "rate_limited" ? "請求太頻繁，稍後再試。" : "這次沒有取得回饋，可以把逐字稿貼到對話裡。"; }
+    askBtn.disabled = false;
+  } }, "請 Claude 回饋");
+  const saveBtn = el("button", { class: "b", onclick: async () => {
+    const rec = { qid, part, question, answer: ta.value, mark: marks[qid] || "", ts: Date.now() };
+    const logs = store.get("spLog", []); logs.unshift(rec); store.set("spLog", logs.slice(0, 200));
+    if (db) { try { await db.collection("speaking").add(rec); status.textContent = "已存到紀錄。"; } catch { status.textContent = "只存在這台裝置。"; } }
+    else status.textContent = "已存在這台裝置。";
+  } }, "存到紀錄");
+  return el("div", { style: "display:flex;flex-direction:column;gap:8px" },
+    el("label", { class: "f", for: "ans-" + qid }, "我的回答"), ta,
+    el("div", { class: "btns" }, saveBtn, status));
+}
+function markButtons(qid) {
+  const done = el("button", { class: "b donebtn", "aria-pressed": String(marks[qid] === "done"), onclick: () => { setMark(qid, "done"); renderSpeak(); } }, "✓ 練好了");
+  const hard = el("button", { class: "b hardbtn", "aria-pressed": String(marks[qid] === "hard"), onclick: () => { setMark(qid, "hard"); renderSpeak(); } }, "不熟，再練");
+  return [done, hard];
+}
+function renderSpPanel() {
+  const it = currentSpeakItem(); SP.sel = it.id;
+  const p = $("#sp-panel"); p.replaceChildren();
+  const clock = el("div", { class: "clock" }, "0:00");
+  const phase = el("div", { class: "phase" });
+  const bar = el("div", { class: "bar" }, el("i"));
+  const paint = (s, frac, warnAt = 10) => { clock.textContent = mmss(s); bar.firstChild.style.width = (frac * 100) + "%"; };
+
+  if (SP.mode === "p1") {
+    const q = it.qs[SP.step]; const qid = `${it.id}:${SP.step}`;
+    p.append(
+      el("div", { class: "crumb" }, el("span", {}, "Part 1"), el("span", {}, "·"), el("span", {}, it.title), el("span", { class: "tag" }, LABEL[it.kind]), el("span", {}, `第 ${SP.step + 1} / ${it.qs.length} 題`)),
+      qBlock([el("h2", { class: "q" }, q)], SP.step === 0 ? `Now, let's talk about ${it.title.toLowerCase()}. ${q}` : q, 1),
+      el("p", { class: "note" }, "每題講 2–3 句，約 20–30 秒：直接回答 → 原因 → 小例子。"),
+      el("div", { class: "timer-row" }, clock, phase), bar,
+      el("div", { class: "btns" },
+        el("button", { class: "b primary", onclick: () => { phase.textContent = "目標 20–30 秒"; runTimer({ seconds: 0, countUp: true, target: 30, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s > 40); } }); } }, "開始作答"),
+        el("button", { class: "b", disabled: SP.step === 0, onclick: () => { SP.step--; stopTimer(); renderSpPanel(); } }, "上一題"),
+        el("button", { class: "b", onclick: () => { stopTimer(); if (SP.step < it.qs.length - 1) { SP.step++; renderSpPanel(); } else { marks[it.id] = marks[it.id] || "done"; store.set("marks", marks); nextTopic(); } } }, SP.step < it.qs.length - 1 ? "下一題" : "下一個主題"),
+        ...markButtons(qid)),
+      answerArea(qid, q, 1));
+    return;
+  }
+
+  // Part 2 → Part 3
+  if (SP.step === 0) {
+    const qid = it.id;
+    const notes = el("textarea", { id: "notes-" + qid, rows: "3", placeholder: "準備時間寫關鍵字（考場會給紙筆）" });
+    notes.value = store.get("notes:" + qid, "");
+    notes.addEventListener("input", () => store.set("notes:" + qid, notes.value));
+    const startPrep = () => { phase.textContent = "準備 1 分鐘"; runTimer({ seconds: 60, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s <= 10); }, onEnd: startTalk }); };
+    const startTalk = () => { phase.textContent = "開始說，講滿 2 分鐘"; runTimer({ seconds: 120, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s <= 15); }, onEnd: () => { phase.textContent = "時間到。考官會在這裡打斷你。"; } }); };
+    p.append(
+      el("div", { class: "crumb" }, el("span", {}, "Part 2"), el("span", {}, "·"), el("span", {}, it.cat), el("span", { class: "tag" }, LABEL[it.kind])),
+      qBlock([el("h2", { class: "q" }, it.full),
+        el("div", { class: "cue" }, el("p", {}, "You should say:"), el("ul", {}, it.bullets.map(b => el("li", {}, b))))],
+        `Now, I'm going to give you a topic, and I'd like you to talk about it for one to two minutes. Before you talk, you'll have one minute to think about what you're going to say. You can make some notes if you wish. Here is your topic. ${it.full}. You should say: ${it.bullets.join(". ")}.`, 2),
+      el("div", { class: "timer-row" }, clock, phase), bar,
+      el("div", { class: "btns" },
+        el("button", { class: "b primary", onclick: startPrep }, "準備 1 分鐘 → 說 2 分鐘"),
+        el("button", { class: "b", onclick: startTalk }, "跳過準備，直接說"),
+        el("button", { class: "b", onclick: () => { stopTimer(); SP.step = 1; renderSpPanel(); } }, "進入 Part 3 →"),
+        ...markButtons(qid)),
+      el("label", { class: "f", for: "notes-" + qid }, "準備筆記"), notes,
+      answerArea(qid, it.full, 2));
+    clock.textContent = "1:00";
+    return;
+  }
+  const k = SP.step - 1, q = it.p3[k], qid = `${it.id}:p3-${k}`;
+  p.append(
+    el("div", { class: "crumb" }, el("span", {}, "Part 3"), el("span", {}, "·"), el("span", {}, it.title), el("span", {}, `第 ${k + 1} / ${it.p3.length} 題`)),
+    qBlock([el("h2", { class: "q" }, q)], k === 0 ? `We've been talking about ${it.title}, and I'd like to discuss with you one or two more general questions related to this. ${q}` : q, 3),
+    el("p", { class: "note" }, "講 40–60 秒：觀點 → 原因 → 例子 → 讓步或對比（However, …）→ 回到觀點。"),
+    el("div", { class: "timer-row" }, clock, phase), bar,
+    el("div", { class: "btns" },
+      el("button", { class: "b primary", onclick: () => { phase.textContent = "目標 40–60 秒"; runTimer({ seconds: 0, countUp: true, target: 60, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s > 75); } }); } }, "開始作答"),
+      el("button", { class: "b", onclick: () => { stopTimer(); SP.step--; renderSpPanel(); } }, k === 0 ? "← 回 Part 2" : "上一題"),
+      el("button", { class: "b", onclick: () => { stopTimer(); if (k < it.p3.length - 1) { SP.step++; renderSpPanel(); } else nextTopic(); } }, k < it.p3.length - 1 ? "下一題" : "下一張題卡"),
+      ...markButtons(qid)),
+    answerArea(qid, q, 3));
+}
+function renderSpeak() { renderSpFilters(); renderSpList(); renderSpPanel(); }
+
+/* ---------- 寫作 ---------- */
+const WR = { type: store.get("wrType", "all"), sel: store.get("wrSel", 0), step: 0 };
+const FIELDS = [
+  ["型別與立場", [
+    ["kind", "這題是什麼題型？", "select"],
+    ["stance", "我的立場（一句英文）", "例：I largely agree, because … but …"],
+  ]],
+  ["引言", [
+    ["intro1", "改寫題目（paraphrase）", "用同義詞改寫題目，不要照抄"],
+    ["intro2", "立場句（thesis）", "清楚說出你的立場，並預告兩個理由"],
+  ]],
+  ["主體段 1", [
+    ["b1t", "主題句", "這段只講一個論點"],
+    ["b1e", "解釋句", "為什麼這個論點成立"],
+    ["b1x", "具體例子", "一個具體情境，不要寫「研究顯示」"],
+    ["b1l", "回扣句", "把例子連回你的立場"],
+  ]],
+  ["主體段 2", [
+    ["b2t", "主題句", "第二個論點（或讓步：Admittedly, …）"],
+    ["b2e", "解釋句", ""],
+    ["b2x", "具體例子", ""],
+    ["b2l", "回扣句", ""],
+  ]],
+  ["結論", [
+    ["c1", "重述立場", "換句話說，不加新觀點"],
+    ["c2", "收尾句", "建議或展望，一句就好"],
+  ]],
+];
+function wrPrompt() { return WR.sel === -1 ? store.get("customPrompt", "") : W2[WR.sel][1]; }
+function wrKey() { return "essay:" + (WR.sel === -1 ? "custom" : WR.sel); }
+function renderWrFilters() {
+  const f = $("#wr-filters"); f.replaceChildren();
+  const chip = (k, l) => el("button", { class: "chip", "aria-pressed": String(WR.type === k), onclick: () => { WR.type = k; store.set("wrType", k); renderWrite(); } }, l);
+  f.append(chip("all", "全部"), ...Object.entries(TYPES).map(([k, l]) => chip(k, l)));
+}
+function renderWrList() {
+  const list = $("#wr-list"); list.replaceChildren();
+  W2.forEach(([k, txt], i) => {
+    if (WR.type !== "all" && WR.type !== k) return;
+    const saved = store.get("essay:" + i, null);
+    list.append(el("button", { class: "item", "aria-current": String(WR.sel === i), onclick: () => { WR.sel = i; WR.step = 0; store.set("wrSel", i); renderWrite(); } },
+      el("span", { class: "dot " + (saved && saved.done ? "done" : "") }),
+      el("span", { class: "t" }, txt.length > 70 ? txt.slice(0, 70) + "…" : txt)));
+  });
+  list.append(el("div", { class: "group-h" }, "自己的題目"),
+    el("button", { class: "item", "aria-current": String(WR.sel === -1), onclick: () => { WR.sel = -1; WR.step = 0; store.set("wrSel", -1); renderWrite(); } },
+      el("span", { class: "dot" }), el("span", { class: "t" }, "貼上一題自己找的題目")));
+}
+function renderWrPanel() {
+  const p = $("#wr-panel"); p.replaceChildren();
+  const data = store.get(wrKey(), {});
+  const save = () => store.set(wrKey(), data);
+  const steps = el("div", { class: "steps" });
+  const names = [...FIELDS.map(f => f[0]), "整理檢查"];
+  names.forEach((n, i) => steps.append(el("button", { class: "step", "aria-current": String(WR.step === i), onclick: () => { WR.step = i; renderWrPanel(); } }, `${i + 1} ${n}`)));
+
+  const head = [];
+  if (WR.sel === -1) {
+    const cp = el("textarea", { id: "custom-prompt", rows: "3", placeholder: "把題目貼在這裡" });
+    cp.value = store.get("customPrompt", "");
+    cp.addEventListener("input", () => store.set("customPrompt", cp.value));
+    head.push(el("label", { class: "f", for: "custom-prompt" }, "題目"), cp);
+  } else {
+    head.push(el("div", { class: "crumb" }, el("span", {}, "Task 2"), el("span", {}, "·"), el("span", {}, TYPES[W2[WR.sel][0]])),
+      el("div", { class: "prompt-box" }, wrPrompt()));
+  }
+  const clock = el("div", { class: "clock", style: "font-size:28px" }, "10:00");
+  const timerRow = el("div", { class: "timer-row" }, clock,
+    el("button", { class: "b", onclick: () => runTimer({ seconds: 600, render: s => { clock.textContent = mmss(s); clock.classList.toggle("warn", s <= 60); } }) }, "大綱計時 10 分鐘"),
+    el("span", { class: "phase" }, "考場上大綱 5 分鐘、寫作 35 分鐘；練習時大綱可以慢一點。"));
+  p.append(...head, timerRow, steps);
+
+  if (WR.step < FIELDS.length) {
+    const [title, fields] = FIELDS[WR.step];
+    const fs = el("fieldset", {}, el("legend", {}, title));
+    for (const [key, label, hint] of fields) {
+      const id = "w-" + key;
+      let input;
+      if (hint === "select") {
+        input = el("select", { id }, el("option", { value: "" }, "選一個"), ...Object.entries(TYPES).map(([k, l]) => el("option", { value: k }, l)));
+        input.value = data[key] || "";
+        input.addEventListener("change", () => { data[key] = input.value; save(); });
+      } else {
+        input = el("textarea", { id, rows: "2", placeholder: hint });
+        input.value = data[key] || "";
+        input.addEventListener("input", () => { data[key] = input.value; save(); });
+      }
+      fs.append(el("label", { class: "f", for: id }, label), input);
+    }
+    p.append(fs, el("div", { class: "btns" },
+      el("button", { class: "b", disabled: WR.step === 0, onclick: () => { WR.step--; renderWrPanel(); } }, "上一步"),
+      el("button", { class: "b primary", onclick: () => { WR.step++; renderWrPanel(); } }, WR.step === FIELDS.length - 1 ? "整理檢查 →" : "下一步")));
+    if (WR.step === 0 && WR.sel !== -1) p.append(el("p", { class: "note" }, "提示：這題是「" + TYPES[W2[WR.sel][0]] + "」。先判斷題型再決定立場，雙問句兩個問題都要回答。"));
+    return;
+  }
+
+  // 整理檢查
+  const para = (h, keys) => el("div", {}, el("h4", {}, h), el("p", {}, keys.map(k => data[k] || "").filter(Boolean).join(" ") || "（還沒寫）"));
+  const outline = el("div", { class: "outline" },
+    el("div", {}, el("h4", {}, "立場"), el("p", {}, (data.kind ? `[${TYPES[data.kind]}] ` : "") + (data.stance || "（還沒寫）"))),
+    para("Introduction", ["intro1", "intro2"]), para("Body 1", ["b1t", "b1e", "b1x", "b1l"]),
+    para("Body 2", ["b2t", "b2e", "b2x", "b2l"]), para("Conclusion", ["c1", "c2"]));
+  const checks = [
+    "立場在引言和結論都看得到，而且一致",
+    "每個主體段只有一個論點",
+    "例子是具體的情境，不是「研究顯示」",
+    "連接詞沒有每句開頭都用",
+    "結論沒有加入新觀點",
+  ];
+  const fb = el("div", { class: "feedback", hidden: true });
+  const status = el("span", { class: "status" });
+  const askBtn = el("button", { class: "b", onclick: async () => {
+    if (!sample) { status.textContent = "這個畫面沒有開放 Claude 回饋，可以到「紀錄」複製後貼到對話裡。"; return; }
+    askBtn.disabled = true; fb.hidden = false; fb.textContent = "Claude 正在看…";
+    const text = `題目：${wrPrompt()}\n題型判斷：${TYPES[data.kind] || "未選"}\n立場：${data.stance || ""}\n引言：${data.intro1 || ""} ${data.intro2 || ""}\n主體1：${["b1t","b1e","b1x","b1l"].map(k => data[k] || "").join(" ")}\n主體2：${["b2t","b2e","b2x","b2l"].map(k => data[k] || "").join(" ")}\n結論：${data.c1 || ""} ${data.c2 || ""}`;
+    try {
+      const r = await sample(`你是資深雅思寫作考官。考生目標寫作 7 分。以下是考生的 Task 2 大綱與每段要用的句子（還不是完整文章）。
+請用繁體中文回覆：
+1. 題型判斷對不對；立場是否清楚、是否回答到題目的每個部分。
+2. 依「任務回應」「連貫與銜接」「詞彙」「文法」各給一句評語與預估分數。
+3. 逐段指出最需要改的一句，給出英文改寫。
+4. 最後一句：照這個大綱寫成文章，最容易在哪裡掉分。
+${text}`, { onText: u => { fb.textContent = u.text; } });
+      fb.textContent = r.text;
+    } catch (e) { fb.textContent = e && e.code === "rate_limited" ? "請求太頻繁，稍後再試。" : "這次沒有取得回饋，可以把大綱貼到對話裡。"; }
+    askBtn.disabled = false;
+  } }, "請 Claude 看大綱");
+  const saveBtn = el("button", { class: "b primary", onclick: async () => {
+    data.done = true; save();
+    const rec = { prompt: wrPrompt(), ...data, ts: Date.now() };
+    const logs = store.get("wrLog", []); logs.unshift(rec); store.set("wrLog", logs.slice(0, 100));
+    if (db) { try { await db.collection("essays").add(rec); status.textContent = "已存到紀錄。"; } catch { status.textContent = "只存在這台裝置。"; } }
+    else status.textContent = "已存在這台裝置。";
+    renderWrList();
+  } }, "存到紀錄");
+  p.append(el("fieldset", {}, el("legend", {}, "我的大綱"), outline),
+    el("fieldset", {}, el("legend", {}, "自我檢查"), ...checks.map((c, i) => {
+      const id = "chk-" + i;
+      const cb = el("input", { type: "checkbox", id }); cb.checked = !!(data.checks || {})[i];
+      cb.addEventListener("change", () => { data.checks = { ...(data.checks || {}), [i]: cb.checked }; save(); });
+      return el("label", { for: id, style: "display:flex;gap:8px;align-items:flex-start;font-size:14px" }, cb, c);
+    })),
+    el("div", { class: "btns" }, saveBtn,
+      el("button", { class: "b", onclick: () => { for (const k of Object.keys(data)) delete data[k]; save(); WR.step = 0; renderWrite(); } }, "清空重寫"), status),
+  );
+}
+function renderWrite() { renderWrFilters(); renderWrList(); renderWrPanel(); }
+
+/* ---------- 紀錄 ---------- */
+let remoteEssays = null, remoteSpeak = null;
+function renderLog() {
+  const p = $("#log-panel"); p.replaceChildren();
+  const essays = remoteEssays || store.get("wrLog", []);
+  const speaks = remoteSpeak || store.get("spLog", []);
+  const hard = Object.entries(marks).filter(([, v]) => v === "hard").length;
+  const done = Object.entries(marks).filter(([, v]) => v === "done").length;
+  p.append(el("h2", { class: "q", style: "font-size:22px" }, "練習紀錄"),
+    el("p", { class: "note" }, `口說：練好 ${done} 題、不熟 ${hard} 題 · 寫作大綱 ${essays.length} 篇 · ${db ? "存在雲端，Claude 在對話裡讀得到" : "只存在這台裝置的瀏覽器"}`));
+  const sec = (title, rows, fmt) => {
+    const box = el("div", {}, el("h3", { style: "font-size:15px;margin:12px 0 0" }, title));
+    if (!rows.length) box.append(el("p", { class: "note", style: "padding-top:8px" }, "還沒有紀錄。練完按「存到紀錄」就會出現在這裡。"));
+    rows.slice(0, 60).forEach(r => box.append(fmt(r)));
+    return box;
+  };
+  const when = ts => new Date(ts).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  p.append(sec("寫作大綱", essays, r => el("div", { class: "rec" },
+    el("span", { class: "meta" }, when(r.ts)),
+    el("details", {}, el("summary", {}, r.stance || r.prompt.slice(0, 80)),
+      el("div", { class: "outline", style: "padding-top:8px" },
+        el("p", { class: "note" }, r.prompt),
+        ...[["Intro", ["intro1", "intro2"]], ["Body 1", ["b1t", "b1e", "b1x", "b1l"]], ["Body 2", ["b2t", "b2e", "b2x", "b2l"]], ["Conclusion", ["c1", "c2"]]]
+          .map(([h, ks]) => el("div", {}, el("h4", {}, h), el("p", {}, ks.map(k => r[k] || "").join(" ")))))))));
+  p.append(sec("口說回答", speaks, r => el("div", { class: "rec" },
+    el("span", { class: "meta" }, `${when(r.ts)} · Part ${r.part}${r.mark === "hard" ? " · 不熟" : ""}`),
+    el("details", {}, el("summary", {}, r.question), el("p", { style: "white-space:pre-wrap;margin:6px 0 0" }, r.answer || "（沒有逐字稿）")))));
+}
+
+/* ---------- 分頁、倒數 ---------- */
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => {
+  stopTimer();
+  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+  for (const t of ["speak", "write", "log"]) $("#view-" + t).hidden = t !== b.dataset.tab;
+  if (b.dataset.tab === "speak") renderSpPanel();
+  if (b.dataset.tab === "write") renderWrite();
+  if (b.dataset.tab === "log") renderLog();
+}));
+function renderCountdown() {
+  const d = Math.ceil((EXAM - new Date()) / 86400000);
+  $("#countdown").replaceChildren(d > 0 ? el("span", {}, "距離 11/25 考試 ", el("b", {}, String(d)), " 天") : el("span", {}, "考試日已過"));
+}
+renderSpeak();
+
+</script>
+
+</body>
+</html>
