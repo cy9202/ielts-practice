@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="雅思口說聽題練習（多國口音、考試語速、2026 年 9–12 月題庫）與寫作 Task 2 大綱訓練">
+<meta name="description" content="雅思口說聽題練習（多國口音、考試語速、2026 年 9–12 月題庫）與寫作 Task 2 練習">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>雅思練習室</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -105,6 +105,7 @@ table.collo tr:last-child td{border-bottom:0}
 .c-cat{font-size:12px;color:var(--muted);white-space:nowrap}
 .c-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 @media (max-width:640px){.c-form{grid-template-columns:minmax(0,1fr)}}
+.warn-text{color:var(--hard)}
 .prompt-box{font-size:16.5px;line-height:1.65;background:var(--bg);border-radius:8px;padding:14px 16px;border:1px solid var(--line)}
 .outline{display:flex;flex-direction:column;gap:12px;font-size:15px}
 .outline h4{margin:0 0 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
@@ -744,12 +745,16 @@ async function requestFrames(body) {
     return r.ok ? j : { message: j.message || "這次沒有產生句型，請再按一次。" };
   } catch { return { message: "連不上伺服器，請檢查網路後再試。" }; }
 }
+const PARAS = [["Introduction", ["intro1", "intro2"]], ["Body 1", ["b1t", "b1e", "b1x", "b1l"]], ["Body 2", ["b2t", "b2e", "b2x", "b2l"]], ["Conclusion", ["c1", "c2"]]];
+function essayParas(data) { return PARAS.map(([h, ks]) => [h, ks.map(k => (data[k] || "").trim()).filter(Boolean).join(" ")]); }
+function essayText(data) { return essayParas(data).map(([, t]) => t).filter(Boolean).join("\n\n"); }
+function wordCount(t) { return (t.match(/[A-Za-z0-9’'-]+/g) || []).length; }
 function renderWrPanel() {
   const p = $("#wr-panel"); p.replaceChildren();
   const data = store.get(wrKey(), {});
   const save = () => store.set(wrKey(), data);
   const steps = el("div", { class: "steps" });
-  const names = [...FIELDS.map(f => f[0]), "整理檢查"];
+  const names = [...FIELDS.map(f => f[0]), "整篇文章"];
   names.forEach((n, i) => steps.append(el("button", { class: "step", "aria-current": String(WR.step === i), onclick: () => { WR.step = i; renderWrPanel(); } }, `${i + 1} ${n}`)));
 
   const head = [];
@@ -768,10 +773,10 @@ function renderWrPanel() {
         el("p", {}, "Give reasons for your answer and include any relevant examples from your own knowledge or experience."),
         el("p", {}, "Write at least 250 words.")));
   }
-  const clock = el("div", { class: "clock", style: "font-size:28px" }, "10:00");
+  const clock = el("div", { class: "clock", style: "font-size:28px" }, "40:00");
   const timerRow = el("div", { class: "timer-row" }, clock,
-    el("button", { class: "b", onclick: () => runTimer({ seconds: 600, render: s => { clock.textContent = mmss(s); clock.classList.toggle("warn", s <= 60); } }) }, "大綱計時 10 分鐘"),
-    el("span", { class: "phase" }, "考場上大綱 5 分鐘、寫作 35 分鐘；練習時大綱可以慢一點。"));
+    el("button", { class: "b", onclick: () => runTimer({ seconds: 2400, render: s => { clock.textContent = mmss(s); clock.classList.toggle("warn", s <= 300); } }) }, "寫作計時 40 分鐘"),
+    el("span", { class: "phase" }, "考場建議：先花 5 分鐘想結構，再寫 30 分鐘，留 5 分鐘檢查。"));
   p.append(...head, timerRow, steps);
 
   if (WR.step < FIELDS.length) {
@@ -795,17 +800,16 @@ function renderWrPanel() {
     }
     p.append(framesBar(data), fs, el("div", { class: "btns" },
       el("button", { class: "b", disabled: WR.step === 0, onclick: () => { WR.step--; renderWrPanel(); } }, "上一步"),
-      el("button", { class: "b primary", onclick: () => { WR.step++; renderWrPanel(); } }, WR.step === FIELDS.length - 1 ? "整理檢查 →" : "下一步")));
+      el("button", { class: "b primary", onclick: () => { WR.step++; renderWrPanel(); } }, WR.step === FIELDS.length - 1 ? "看整篇文章 →" : "下一步")));
     if (WR.step === 0 && WR.sel !== -1) p.append(el("p", { class: "note" }, "提示：這題是「" + TYPES[W2[WR.sel][0]] + "」。先判斷題型再決定立場，雙問句兩個問題都要回答。"));
     return;
   }
 
   // 整理檢查
-  const para = (h, keys) => el("div", {}, el("h4", {}, h), el("p", {}, keys.map(k => data[k] || "").filter(Boolean).join(" ") || "（還沒寫）"));
+  const words = wordCount(essayText(data));
   const outline = el("div", { class: "outline" },
-    el("div", {}, el("h4", {}, "立場"), el("p", {}, (data.kind ? `[${TYPES[data.kind]}] ` : "") + (data.stance || "（還沒寫）"))),
-    para("Introduction", ["intro1", "intro2"]), para("Body 1", ["b1t", "b1e", "b1x", "b1l"]),
-    para("Body 2", ["b2t", "b2e", "b2x", "b2l"]), para("Conclusion", ["c1", "c2"]));
+    el("p", { class: words >= 250 ? "status" : "status warn-text" }, `共 ${words} 字${words >= 250 ? "" : "，不到 250 字，任務回應會被扣分"}`),
+    ...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, t || "（還沒寫）"))));
   const checks = [
     "立場在引言和結論都看得到，而且一致",
     "每個主體段只有一個論點",
@@ -817,15 +821,10 @@ function renderWrPanel() {
   const status = el("span", { class: "status" });
   const askBtn = el("button", { class: "b", onclick: async () => {
     askBtn.disabled = true; fb.hidden = false; fb.textContent = "AI 批改中，大約 10–20 秒…";
-    const text = `題型判斷：${TYPES[data.kind] || "未選"}
-立場：${data.stance || ""}
-引言：${data.intro1 || ""} ${data.intro2 || ""}
-主體1：${["b1t","b1e","b1x","b1l"].map(k => data[k] || "").join(" ")}
-主體2：${["b2t","b2e","b2x","b2l"].map(k => data[k] || "").join(" ")}
-結論：${data.c1 || ""} ${data.c2 || ""}`;
+    const text = `題型判斷：${TYPES[data.kind] || "未選"}\n立場：${data.stance || ""}\n\n文章：\n${essayText(data)}`;
     showReview(fb, await aiReview({ kind: "writing", question: wrPrompt(), answer: text }), "寫作");
     askBtn.disabled = false;
-  } }, "AI 看大綱");
+  } }, "AI 批改文章");
   const saveBtn = el("button", { class: "b primary", onclick: async () => {
     data.done = true; save();
     const rec = { prompt: wrPrompt(), ...data, ts: Date.now() };
@@ -834,7 +833,7 @@ function renderWrPanel() {
     else status.textContent = "已存在這台裝置。";
     renderWrList();
   } }, "存到紀錄");
-  p.append(el("fieldset", {}, el("legend", {}, "我的大綱"), outline),
+  p.append(el("fieldset", {}, el("legend", {}, "我的文章"), outline),
     el("fieldset", {}, el("legend", {}, "自我檢查"), ...checks.map((c, i) => {
       const id = "chk-" + i;
       const cb = el("input", { type: "checkbox", id }); cb.checked = !!(data.checks || {})[i];
@@ -888,7 +887,7 @@ function showReview(fb, raw, from) {
   fb.textContent = text;
   if (!fixes.length) return;
   const box = el("div", { class: "frames", style: "margin-top:12px;white-space:normal" },
-    el("span", { class: "frames-h" }, "這次用錯的說法"));
+    el("span", { class: "frames-h" }, "AI 建議改的說法"), el("span", { class: "frame-n" }, "免費模型常把原本正確、只是不夠高級的句子也列進來。真的是錯的才加入。"));
   for (const f of fixes) {
     const btn = el("button", { class: "b frame-use" }, "加入我的搭配詞");
     btn.addEventListener("click", () => {
@@ -948,7 +947,7 @@ function renderLog() {
   const hard = Object.entries(marks).filter(([, v]) => v === "hard").length;
   const done = Object.entries(marks).filter(([, v]) => v === "done").length;
   p.append(el("h2", { class: "q", style: "font-size:22px" }, "練習紀錄"),
-    el("p", { class: "note" }, `口說：練好 ${done} 題、不熟 ${hard} 題 · 寫作大綱 ${essays.length} 篇 · ${db ? "存在雲端，Claude 在對話裡讀得到" : "只存在這台裝置的瀏覽器"}`));
+    el("p", { class: "note" }, `口說：練好 ${done} 題、不熟 ${hard} 題 · 寫作 ${essays.length} 篇 · ${db ? "存在雲端，Claude 在對話裡讀得到" : "只存在這台裝置的瀏覽器"}`));
   const sec = (title, rows, fmt) => {
     const box = el("div", {}, el("h3", { style: "font-size:15px;margin:12px 0 0" }, title));
     if (!rows.length) box.append(el("p", { class: "note", style: "padding-top:8px" }, "還沒有紀錄。練完按「存到紀錄」就會出現在這裡。"));
@@ -956,7 +955,7 @@ function renderLog() {
     return box;
   };
   const when = ts => new Date(ts).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  p.append(sec("寫作大綱", essays, r => el("div", { class: "rec" },
+  p.append(sec("寫作", essays, r => el("div", { class: "rec" },
     el("span", { class: "meta" }, when(r.ts)),
     el("details", {}, el("summary", {}, r.stance || r.prompt.slice(0, 80)),
       el("div", { class: "outline", style: "padding-top:8px" },
