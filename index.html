@@ -275,7 +275,7 @@ let marks = store.get("marks", {});           // qid -> "done" | "hard"
 let db = null, sample = null;
 
 const LABEL = {new:"新題",ret:"保留",must:"必考",sup:"補充"};
-const SP = { mode: store.get("spMode", "p2"), only: store.get("spOnly", "all"), sel: null, step: 0, phase: "idle", listen: store.get("listen", true) };
+const SP = { mode: store.get("spMode", "p2"), only: store.get("spOnly", "all"), sel: null, step: 0, phase: "idle", listen: store.get("listen2", true) };
 
 /* ---------- 聽題模式：題目先藏起來，用唸的 ---------- */
 const canSpeak = "speechSynthesis" in window;
@@ -324,9 +324,14 @@ function qBlock(nodes, spoken, part) {
   const key = `${SP.mode}|${SP.sel}|${SP.step}`;
   const changed = key !== lastSpokenKey; lastSpokenKey = key;
   const info = el("span", { class: "status" });
-  if (!SP.listen || !canSpeak) {
+  if (!canSpeak) {
     return el("div", { style: "display:flex;flex-direction:column;gap:12px" }, nodes,
-      SP.listen && !canSpeak ? el("p", { class: "note" }, "這個瀏覽器不能唸題目，所以直接顯示。") : null);
+      el("p", { class: "note" }, "這個瀏覽器不能唸題目，所以直接顯示。"));
+  }
+  // 聽題模式關閉：題目直接顯示，但仍可以按播放
+  if (!SP.listen) {
+    return el("div", { style: "display:flex;flex-direction:column;gap:12px" }, nodes,
+      el("div", { class: "btns", style: "align-items:center" }, el("button", { class: "b", onclick: () => say(spoken, key, info) }, "▶ 播放題目"), info));
   }
   if (changed && userActed) setTimeout(() => say(spoken, key, info), 150);
   const box = el("div", { hidden: true, style: "display:flex;flex-direction:column;gap:12px" }, nodes);
@@ -451,7 +456,7 @@ function renderSpFilters() {
     chip("Part 1", SP.mode === "p1", () => { SP.mode = "p1"; store.set("spMode", "p1"); SP.sel = null; renderSpeak(); }),
     chip("Part 2 + 3", SP.mode === "p2", () => { SP.mode = "p2"; store.set("spMode", "p2"); SP.sel = null; renderSpeak(); }),
   );
-  f.append(chip("聽題模式", SP.listen, () => { SP.listen = !SP.listen; store.set("listen", SP.listen); if (canSpeak) speechSynthesis.cancel(); renderSpeak(); }));
+  f.append(chip(SP.listen ? "聽題模式：開" : "聽題模式：關", SP.listen, () => { SP.listen = !SP.listen; store.set("listen2", SP.listen); if (canSpeak) speechSynthesis.cancel(); renderSpeak(); }));
   if (SP.listen && canSpeak) {
     const have = new Set(voices.map(v => v.lang.replace("_", "-").toLowerCase()));
     const acc = el("select", { id: "accent", "aria-label": "口音", style: "width:auto;font-size:13px;padding:3px 8px", onchange: e => { SP.accent = e.target.value; store.set("accent", SP.accent); voiceByKey = {}; } },
