@@ -368,7 +368,7 @@ async function aiReview(body) {
 （今天還能批改 ${j.left} 次）` : "");
   } catch { return "連不上批改伺服器，請檢查網路後再試。"; }
 }
-const aiNote = () => el("p", { class: "note" }, "AI 批改用的是免費開源模型，分數僅供參考；每人每天 10 次。");
+const aiNote = () => el("p", { class: "note" }, "AI 批改用的是免費開源模型，分數僅供參考。");
 
 /* ---------- 口說 ---------- */
 function speakItems() {
