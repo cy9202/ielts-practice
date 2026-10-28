@@ -878,6 +878,12 @@ const MY_COLLO_KEY = "myCollo";
 // 公開網站給朋友用，不預先放我的錯誤
 const COLLO_SEED = [];
 const COLLO_STATE = { q: "" };
+let colloImportMsg = "";
+function openColloTab(msg) {
+  colloImportMsg = msg;
+  const b = document.querySelector('nav.tabs button[data-tab="collo"]');
+  if (b) b.click();
+}
 function myCollo() {
   const mine = store.get(MY_COLLO_KEY, null);
   if (mine) return mine;
@@ -957,6 +963,7 @@ function renderCollo() {
   } }, "加入表格");
   p.append(
     el("h2", { class: "q", style: "font-size:22px" }, "我的搭配詞"),
+    colloImportMsg ? el("p", { class: "status", style: "color:var(--accent)" }, colloImportMsg) : null,
     el("p", { class: "note" }, `只放自己犯過的錯，共 ${rows.length} 筆。AI 批改後按「加入我的搭配詞」，或在下面自己加。`),
     search,
     el("div", { class: "c-wrap" }, el("table", { class: "collo" },
@@ -1009,6 +1016,18 @@ function renderCountdown() {
   $("#countdown").replaceChildren(d > 0 ? el("span", {}, "距離 11/25 考試 ", el("b", {}, String(d)), " 天") : el("span", {}, "考試日已過"));
 }
 renderSpeak();
+// 個人匯入連結：只有拿到這個連結的人會把這些錯誤加進自己的表格
+(() => {
+  const m = location.hash.match(/^#collo=([A-Za-z0-9_-]+)$/);
+  if (!m) return;
+  try {
+    const b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
+    const items = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), c => c.charCodeAt(0))));
+    const n = addCollo(items.filter(x => x && x.wrong && x.right));
+    history.replaceState(null, "", location.pathname + location.search);
+    openColloTab(n ? `已加入 ${n} 筆到我的搭配詞。` : "這些說法表格裡都已經有了。");
+  } catch { openColloTab("匯入連結格式不對，沒有加入任何東西。"); }
+})();
 
 </script>
 
