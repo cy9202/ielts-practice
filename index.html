@@ -121,6 +121,11 @@ table.collo tr:last-child td{border-bottom:0}
   .cmp > :nth-last-child(-n+2){border-bottom:1px solid var(--line)}
   .cmp > :last-child{border-bottom:0}
 }
+.sents{display:flex;flex-direction:column;gap:10px}
+.sent{display:flex;flex-direction:column;gap:3px}
+.sent-tag{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
+.sent-role{font-size:11px;font-weight:700;color:var(--surface);background:var(--accent);border-radius:4px;padding:0 6px;line-height:1.7;white-space:nowrap}
+.sent-pat{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
 .prompt-box{font-size:16.5px;line-height:1.65;background:var(--bg);border-radius:8px;padding:14px 16px;border:1px solid var(--line)}
 .outline{display:flex;flex-direction:column;gap:12px;font-size:15px}
 .outline h4{margin:0 0 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
@@ -783,21 +788,32 @@ async function requestRewrite(body) {
 }
 // 左右對照：我的文章逐段對齊改寫範文，手機上改成上下
 function compareView(data, r) {
-  const [model, changes = ""] = r.text.split(/\n\s*改了什麼[:：]/);
-  const right = model.split(/\n\s*\n/).map(t => t.trim()).filter(Boolean);
+  let right, list;
+  if (r.paragraphs) {
+    right = r.paragraphs.map(p => el("div", { class: "sents" }, p.sentences.map(x => el("div", { class: "sent" },
+      el("span", {}, x.text),
+      el("div", { class: "sent-tag" },
+        x.role ? el("span", { class: "sent-role" }, x.role) : null,
+        x.pattern && x.pattern !== "—" ? el("span", { class: "sent-pat" }, x.pattern) : null)))));
+    list = r.changes || [];
+  } else {
+    const [model, changes = ""] = r.text.split(/\n\s*改了什麼[:：]/);
+    right = model.split(/\n\s*\n/).map(t => t.trim()).filter(Boolean);
+    list = changes.split("\n").map(t => t.replace(/^\s*[-•]\s*/, "").trim()).filter(Boolean);
+  }
   const left = essayParas(data).map(([, t]) => t).filter(Boolean);
   const n = Math.max(left.length, right.length);
   const grid = el("div", { class: "cmp" },
     el("div", { class: "cmp-h" }, `我的文章 · ${wordCount(essayText(data))} 字`),
-    el("div", { class: "cmp-h cmp-r" }, `改寫範文 · ${r.words} 字`));
+    el("div", { class: "cmp-h cmp-r" }, `改寫範文 · ${r.words} 字${r.paragraphs ? " · 每句下面是作用和句型" : ""}`));
   for (let i = 0; i < n; i++) {
     grid.append(
       el("div", { class: "cmp-c", "data-label": "我的文章" }, left[i] || ""),
       el("div", { class: "cmp-c cmp-r", "data-label": "改寫範文" }, right[i] || ""));
   }
-  const list = changes.split("\n").map(t => t.replace(/^\s*[-•]\s*/, "").trim()).filter(Boolean);
   return el("div", { style: "display:flex;flex-direction:column;gap:12px;white-space:normal" },
     grid,
+    !r.paragraphs ? el("p", { class: "note" }, "這篇範文是舊版產生的，沒有句型標註；按「重新改寫一篇」就會有。") : null,
     list.length ? el("div", { class: "frames" }, el("span", { class: "frames-h" }, "改了什麼"),
       el("ul", { style: "margin:0;padding-left:20px" }, list.map(t => el("li", {}, t)))) : null);
 }
