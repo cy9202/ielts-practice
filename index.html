@@ -368,7 +368,6 @@ async function aiReview(body) {
 （今天還能批改 ${j.left} 次）` : "");
   } catch { return "連不上批改伺服器，請檢查網路後再試。"; }
 }
-const aiNote = () => el("p", { class: "note" }, "AI 批改用的是免費開源模型，分數僅供參考。");
 
 /* ---------- 口說 ---------- */
 function speakItems() {
@@ -457,7 +456,7 @@ function answerArea(qid, question, part) {
   } }, "存到紀錄");
   return el("div", { style: "display:flex;flex-direction:column;gap:8px" },
     el("label", { class: "f", for: "ans-" + qid }, "我的回答"), ta,
-    el("div", { class: "btns" }, saveBtn, askBtn, status), fb, aiNote());
+    el("div", { class: "btns" }, saveBtn, askBtn, status), fb);
 }
 function markButtons(qid) {
   const done = el("button", { class: "b donebtn", "aria-pressed": String(marks[qid] === "done"), onclick: () => { setMark(qid, "done"); renderSpeak(); } }, "✓ 練好了");
@@ -666,7 +665,7 @@ function renderWrPanel() {
     })),
     el("div", { class: "btns" }, saveBtn, askBtn,
       el("button", { class: "b", onclick: () => { for (const k of Object.keys(data)) delete data[k]; save(); WR.step = 0; renderWrite(); } }, "清空重寫"), status),
-    fb, aiNote());
+    fb);
 }
 function renderWrite() { renderWrFilters(); renderWrList(); renderWrPanel(); }
 
