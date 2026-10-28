@@ -400,24 +400,24 @@ async function toWav16k(blob) {
   return new Blob([buf], { type: "audio/wav" });
 }
 
-function recorder(ta, onText) {
-  if (!canRecord) return el("span", { class: "status" }, "這個瀏覽器不能錄音，請用 Chrome、Edge 或 Safari。");
+// 錄音器沒有自己的按鈕，由「開始作答」一起控制：開始＝錄音＋計時，停止＝停錄並轉文字
+function recorder(onText) {
   const status = el("span", { class: "status" });
   const player = el("audio", { controls: true, hidden: true, style: "width:100%;max-width:420px;height:36px" });
-  const btn = el("button", { class: "b primary" }, "● 錄音");
-  let rec = null, chunks = [], t0 = 0, iv = null, stream = null;
-  const stop = () => { if (rec && rec.state === "recording") rec.stop(); };
-  btn.addEventListener("click", async () => {
-    if (rec && rec.state === "recording") { stop(); return; }
+  const node = el("div", { style: "display:flex;flex-direction:column;gap:6px" }, status, player);
+  if (!canRecord) status.textContent = "這個瀏覽器不能錄音，只會計時；請用 Chrome、Edge 或 Safari。";
+  let rec = null, chunks = [], stream = null, cap = null;
+  const stop = () => { clearTimeout(cap); if (rec && rec.state === "recording") rec.stop(); };
+  const start = async () => {
+    if (!canRecord) return false;
     if (activeRec && activeRec !== stop) activeRec();
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { status.textContent = "沒有拿到麥克風權限。請在網址列左邊的鎖頭圖示允許麥克風。"; return; }
+    catch { status.textContent = "沒有拿到麥克風權限，這次只計時。請在網址列左邊的鎖頭圖示允許麥克風。"; return false; }
     chunks = []; rec = new MediaRecorder(stream);
     rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     rec.onstop = async () => {
-      clearInterval(iv); activeRec = null;
+      if (activeRec === stop) activeRec = null;
       stream.getTracks().forEach(t => t.stop());
-      btn.textContent = "● 重錄"; btn.disabled = true;
       const blob = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
       player.src = URL.createObjectURL(blob); player.hidden = false;
       status.textContent = "轉文字中…";
@@ -426,16 +426,30 @@ function recorder(ta, onText) {
         const r = await fetch(TRANSCRIBE_URL, { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) status.textContent = j.message || "轉文字失敗，請再錄一次。";
-        else { onText(j.text); status.textContent = "已轉成文字，放進下面的回答欄。"; }
+        else { onText(j.text); status.textContent = "已轉成文字，放進下面的回答欄；上面可以回聽錄音。"; }
       } catch { status.textContent = "轉文字失敗，請檢查網路後再錄一次。"; }
-      btn.disabled = false;
     };
-    rec.start(); t0 = Date.now(); activeRec = stop;
-    btn.textContent = "■ 停止 0:00"; status.textContent = "錄音中，說完按停止。";
-    iv = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); btn.textContent = `■ 停止 ${mmss(s)}`; if (s >= 300) stop(); }, 500);
+    rec.start(); activeRec = stop;
+    cap = setTimeout(stop, 300000);
+    status.textContent = "● 錄音中";
+    return true;
+  };
+  return { node, start, stop };
+}
+
+// 一顆按鈕同時開始錄音和計時；再按一次（或時間到）就一起停止
+function goButton(ans, label, onStart) {
+  const b = el("button", { class: "b primary" }, label);
+  let on = false;
+  const end = () => { if (!on) return; on = false; stopTimer(); ans.rec.stop(); b.textContent = label; };
+  b.addEventListener("click", async () => {
+    if (on) { end(); return; }
+    on = true; b.textContent = "■ 停止作答"; b.disabled = true;
+    await ans.rec.start();
+    b.disabled = false;
+    if (on) onStart(end);
   });
-  return el("div", { style: "display:flex;flex-direction:column;gap:6px" },
-    el("div", { class: "btns", style: "align-items:center" }, btn, status), player);
+  return b;
 }
 
 /* ---------- 口說 ---------- */
@@ -523,10 +537,13 @@ function answerArea(qid, question, part) {
     if (db) { try { await db.collection("speaking").add(rec); status.textContent = "已存到紀錄。"; } catch { status.textContent = "只存在這台裝置。"; } }
     else status.textContent = "已存在這台裝置。";
   } }, "存到紀錄");
-  return el("div", { style: "display:flex;flex-direction:column;gap:8px" },
-    recorder(ta, text => { ta.value = ta.value.trim() ? ta.value.trim() + "\n" + text : text; store.set(draftKey, ta.value); }),
-    el("label", { class: "f", for: "ans-" + qid }, "我的回答（錄音會自動轉成文字放這裡，也可以自己修改）"), ta,
+  const rec = recorder(text => { ta.value = ta.value.trim() ? ta.value.trim() + "\n" + text : text; store.set(draftKey, ta.value); });
+  const box = el("div", { style: "display:flex;flex-direction:column;gap:8px" },
+    rec.node,
+    el("label", { class: "f", for: "ans-" + qid }, "我的回答（錄音停止後會自動轉成文字放這裡，也可以自己修改）"), ta,
     el("div", { class: "btns" }, saveBtn, askBtn, status), fb);
+  box.rec = rec;
+  return box;
 }
 function markButtons(qid) {
   const done = el("button", { class: "b donebtn", "aria-pressed": String(marks[qid] === "done"), onclick: () => { setMark(qid, "done"); renderSpeak(); } }, "✓ 練好了");
@@ -535,6 +552,7 @@ function markButtons(qid) {
 }
 function renderSpPanel() {
   const it = currentSpeakItem(); SP.sel = it.id;
+  stopTimer(); if (activeRec) activeRec();   // 換題時停掉上一題的錄音（已錄的照樣轉文字）
   const p = $("#sp-panel"); p.replaceChildren();
   const clock = el("div", { class: "clock" }, "0:00");
   const phase = el("div", { class: "phase" });
@@ -543,17 +561,18 @@ function renderSpPanel() {
 
   if (SP.mode === "p1") {
     const q = it.qs[SP.step]; const qid = `${it.id}:${SP.step}`;
+    const ans = answerArea(qid, q, 1);
     p.append(
       el("div", { class: "crumb" }, el("span", {}, "Part 1"), el("span", {}, "·"), el("span", {}, it.title), el("span", { class: "tag" }, LABEL[it.kind]), el("span", {}, `第 ${SP.step + 1} / ${it.qs.length} 題`)),
       qBlock([el("h2", { class: "q" }, q)], SP.step === 0 ? `Now, let's talk about ${it.title.toLowerCase()}. ${q}` : q, 1),
       el("p", { class: "note" }, "每題講 2–3 句，約 20–30 秒：直接回答 → 原因 → 小例子。"),
       el("div", { class: "timer-row" }, clock, phase), bar,
       el("div", { class: "btns" },
-        el("button", { class: "b primary", onclick: () => { phase.textContent = "目標 20–30 秒"; runTimer({ seconds: 0, countUp: true, target: 30, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s > 40); } }); } }, "開始作答"),
+        goButton(ans, "● 開始作答（錄音＋計時）", () => { phase.textContent = "目標 20–30 秒"; runTimer({ seconds: 0, countUp: true, target: 30, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s > 40); } }); }),
         el("button", { class: "b", disabled: SP.step === 0, onclick: () => { SP.step--; stopTimer(); renderSpPanel(); } }, "上一題"),
         el("button", { class: "b", onclick: () => { stopTimer(); if (SP.step < it.qs.length - 1) { SP.step++; renderSpPanel(); } else { marks[it.id] = marks[it.id] || "done"; store.set("marks", marks); nextTopic(); } } }, SP.step < it.qs.length - 1 ? "下一題" : "下一個主題"),
         ...markButtons(qid)),
-      answerArea(qid, q, 1));
+      ans);
     return;
   }
 
@@ -563,8 +582,10 @@ function renderSpPanel() {
     const notes = el("textarea", { id: "notes-" + qid, rows: "3", placeholder: "準備時間寫關鍵字（考場會給紙筆）" });
     notes.value = store.get("notes:" + qid, "");
     notes.addEventListener("input", () => store.set("notes:" + qid, notes.value));
-    const startPrep = () => { phase.textContent = "準備 1 分鐘"; runTimer({ seconds: 60, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s <= 10); }, onEnd: startTalk }); };
-    const startTalk = () => { phase.textContent = "開始說，講滿 2 分鐘"; runTimer({ seconds: 120, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s <= 15); }, onEnd: () => { phase.textContent = "時間到。考官會在這裡打斷你。"; } }); };
+    const ans = answerArea(qid, it.full, 2);
+    const startPrep = () => { phase.textContent = "準備 1 分鐘（還沒錄音）"; runTimer({ seconds: 60, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s <= 10); }, onEnd: () => talkBtn.click() }); };
+    const startTalk = end => { phase.textContent = "開始說，講滿 2 分鐘"; runTimer({ seconds: 120, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s <= 15); }, onEnd: () => { end(); phase.textContent = "時間到，錄音已停止。考官會在這裡打斷你。"; } }); };
+    const talkBtn = goButton(ans, "● 開始說（錄音＋計時 2 分鐘）", startTalk);
     p.append(
       el("div", { class: "crumb" }, el("span", {}, "Part 2"), el("span", {}, "·"), el("span", {}, it.cat), el("span", { class: "tag" }, LABEL[it.kind])),
       qBlock([el("h2", { class: "q" }, it.full),
@@ -572,27 +593,29 @@ function renderSpPanel() {
         `Now, I'm going to give you a topic, and I'd like you to talk about it for one to two minutes. Before you talk, you'll have one minute to think about what you're going to say. You can make some notes if you wish. Here is your topic. ${it.full}. You should say: ${it.bullets.join(". ")}.`, 2),
       el("div", { class: "timer-row" }, clock, phase), bar,
       el("div", { class: "btns" },
-        el("button", { class: "b primary", onclick: startPrep }, "準備 1 分鐘 → 說 2 分鐘"),
-        el("button", { class: "b", onclick: startTalk }, "跳過準備，直接說"),
+        el("button", { class: "b", onclick: startPrep }, "準備 1 分鐘"),
+        talkBtn,
         el("button", { class: "b", onclick: () => { stopTimer(); SP.step = 1; renderSpPanel(); } }, "進入 Part 3 →"),
         ...markButtons(qid)),
       el("label", { class: "f", for: "notes-" + qid }, "準備筆記"), notes,
-      answerArea(qid, it.full, 2));
+      ans);
     clock.textContent = "1:00";
+    phase.textContent = "按「準備 1 分鐘」，時間到會自動開始錄音；或直接按「開始說」。";
     return;
   }
   const k = SP.step - 1, q = it.p3[k], qid = `${it.id}:p3-${k}`;
+  const ans = answerArea(qid, q, 3);
   p.append(
     el("div", { class: "crumb" }, el("span", {}, "Part 3"), el("span", {}, "·"), el("span", {}, it.title), el("span", {}, `第 ${k + 1} / ${it.p3.length} 題`)),
     qBlock([el("h2", { class: "q" }, q)], k === 0 ? `We've been talking about ${it.title}, and I'd like to discuss with you one or two more general questions related to this. ${q}` : q, 3),
     el("p", { class: "note" }, "講 40–60 秒：觀點 → 原因 → 例子 → 讓步或對比（However, …）→ 回到觀點。"),
     el("div", { class: "timer-row" }, clock, phase), bar,
     el("div", { class: "btns" },
-      el("button", { class: "b primary", onclick: () => { phase.textContent = "目標 40–60 秒"; runTimer({ seconds: 0, countUp: true, target: 60, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s > 75); } }); } }, "開始作答"),
+      goButton(ans, "● 開始作答（錄音＋計時）", () => { phase.textContent = "目標 40–60 秒"; runTimer({ seconds: 0, countUp: true, target: 60, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s > 75); } }); }),
       el("button", { class: "b", onclick: () => { stopTimer(); SP.step--; renderSpPanel(); } }, k === 0 ? "← 回 Part 2" : "上一題"),
       el("button", { class: "b", onclick: () => { stopTimer(); if (k < it.p3.length - 1) { SP.step++; renderSpPanel(); } else nextTopic(); } }, k < it.p3.length - 1 ? "下一題" : "下一張題卡"),
       ...markButtons(qid)),
-    answerArea(qid, q, 3));
+    ans);
 }
 function renderSpeak() { renderSpFilters(); renderSpList(); renderSpPanel(); }
 
