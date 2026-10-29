@@ -126,6 +126,8 @@ table.collo tr:last-child td{border-bottom:0}
 .sent-tag{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
 .sent-role{font-size:11px;font-weight:700;color:var(--surface);background:var(--accent);border-radius:4px;padding:0 6px;line-height:1.7;white-space:nowrap}
 .sent-pat{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+mark.typo{background:none;color:var(--hard);font-weight:700;text-decoration:underline wavy var(--hard);text-underline-offset:3px;cursor:help}
+.typo-fix{color:var(--hard);font-family:var(--f-mono);font-size:12.5px}
 .prompt-box{font-size:16.5px;line-height:1.65;background:var(--bg);border-radius:8px;padding:14px 16px;border:1px solid var(--line)}
 .outline{display:flex;flex-direction:column;gap:12px;font-size:15px}
 .outline h4{margin:0 0 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
@@ -817,6 +819,21 @@ function compareView(data, r) {
     list.length ? el("div", { class: "frames" }, el("span", { class: "frames-h" }, "改了什麼"),
       el("ul", { style: "margin:0;padding-left:20px" }, list.map(t => el("li", {}, t)))) : null);
 }
+async function requestSpell(text) {
+  try {
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "spell", text }) });
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? j : { message: j.message || "這次沒有檢查到拼字。" };
+  } catch { return { message: "連不上伺服器，拼字沒有檢查。" }; }
+}
+// 把拼錯的字包成紅字，滑過去看正確拼法
+function highlightTypos(text, typos) {
+  if (!typos || !typos.length) return [text];
+  const map = new Map(typos.map(t => [t.wrong.toLowerCase(), t.right]));
+  return text.split(/([A-Za-z’'-]+)/).map(part => map.has(part.toLowerCase())
+    ? el("mark", { class: "typo", title: "→ " + map.get(part.toLowerCase()) }, part)
+    : part);
+}
 function renderWrPanel() {
   const p = $("#wr-panel"); p.replaceChildren();
   const data = store.get(wrKey(), {});
@@ -875,9 +892,32 @@ function renderWrPanel() {
 
   // 整理檢查
   const words = wordCount(essayText(data));
+  // 拼字：同一篇文章只檢查一次，結果存在這台電腦
+  const spKey = "spell:" + wrKey();
+  const spCache = store.get(spKey, null);
+  const essayForSpell = essayText(data);
+  const spStatus = el("p", { class: "status" });
+  const paraBox = el("div", { class: "outline" });
+  const drawParas = typos => {
+    paraBox.replaceChildren(...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, ...(t ? highlightTypos(t, typos) : ["（還沒寫）"])))));
+    if (typos && typos.length) spStatus.replaceChildren(`紅字是拼錯的字（${typos.length} 個）：`, ...typos.flatMap((t, i) => [i ? "、" : "", el("span", { class: "typo-fix" }, t.wrong + " → " + t.right)]));
+    else if (typos) spStatus.textContent = "沒有找到拼字錯誤。";
+  };
+  if (spCache && spCache.essay === essayForSpell) drawParas(spCache.typos);
+  else {
+    drawParas(null);
+    if (wordCount(essayForSpell) >= 20) {
+      spStatus.textContent = "正在檢查拼字，大約 20–30 秒…";
+      requestSpell(essayForSpell).then(r => {
+        if (!r.typos) { spStatus.textContent = r.message; return; }
+        store.set(spKey, { essay: essayForSpell, typos: r.typos });
+        drawParas(r.typos);
+      });
+    }
+  }
   const outline = el("div", { class: "outline" },
     el("p", { class: words >= 250 ? "status" : "status warn-text" }, `共 ${words} 字${words >= 250 ? "" : "，不到 250 字，任務回應會被扣分"}`),
-    ...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, t || "（還沒寫）"))));
+    spStatus, paraBox);
   const checks = [
     "立場明確，引言和結論一致（雙面討論題結論一定要表態）",
     "每段只聚焦一個重點，段落安排符合這個題型的標準架構",
