@@ -127,6 +127,7 @@ table.collo tr:last-child td{border-bottom:0}
 .sent-role{font-size:11px;font-weight:700;color:var(--surface);background:var(--accent);border-radius:4px;padding:0 6px;line-height:1.7;white-space:nowrap}
 .sent-pat{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
 mark.typo{background:none;color:var(--hard);font-weight:700;text-decoration:underline wavy var(--hard);text-underline-offset:3px;cursor:help}
+.typo-alt{color:var(--hard);font-size:.92em}
 .typo-fix{color:var(--hard);font-family:var(--f-mono);font-size:12.5px}
 mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline #2f6db5;text-underline-offset:3px}
 .upg-alt{color:#2f6db5;font-size:.92em}
@@ -861,9 +862,9 @@ function highlightEssay(text, typos, upgrades) {
 function highlightTypos(text, typos) {
   if (!typos || !typos.length) return [text];
   const map = new Map(typos.map(t => [t.wrong.toLowerCase(), t.right]));
-  return text.split(/([A-Za-z’'-]+)/).map(part => map.has(part.toLowerCase())
-    ? el("mark", { class: "typo", title: "→ " + map.get(part.toLowerCase()) }, part)
-    : part);
+  return text.split(/([A-Za-z’'-]+)/).flatMap(part => map.has(part.toLowerCase())
+    ? [el("mark", { class: "typo", title: "→ " + map.get(part.toLowerCase()) }, part), el("span", { class: "typo-alt" }, ` (${map.get(part.toLowerCase())})`)]
+    : [part]);
 }
 async function requestUpgrade(text) {
   try {
@@ -1062,12 +1063,21 @@ function addCollo(items) {
 }
 
 // AI 批改最後一行「FIXES: 錯 => 對 | 錯 => 對」：拿出來變成可加入表格的按鈕
+// 只差在字尾（-s、-ed、-ing）、be/have/do 的變化、或冠詞的修正，算文法錯誤，不放進搭配詞
+const GRAMMAR_WORDS = new Set(["a", "an", "the", "is", "are", "was", "were", "be", "been", "being", "am", "have", "has", "had", "do", "does", "did"]);
+function isGrammarOnly(wrong, right) {
+  const tok = t => t.toLowerCase().replace(/[^a-z' ]/g, " ").split(/\s+/).filter(Boolean);
+  const a = tok(wrong).filter(w => !GRAMMAR_WORDS.has(w)), b = tok(right).filter(w => !GRAMMAR_WORDS.has(w));
+  if (a.length !== b.length) return false;
+  const stem = w => w.replace(/ies$/, "y").replace(/(es|s|ed|d|ing)$/, "");
+  return a.every((w, i) => w === b[i] || stem(w) === stem(b[i]) || b[i].startsWith(w) && b[i].length - w.length <= 3 || w.startsWith(b[i]) && w.length - b[i].length <= 3);
+}
 function parseFixes(text) {
   const fixes = [];
   const clean = text.replace(/^.*FIXES:(.*)$/m, (line, list) => {
     for (const part of list.split("|")) {
       const [w, r] = part.split("=>").map(x => (x || "").trim().replace(/^["“”']|["“”']$/g, ""));
-      if (w && r && w !== "無") fixes.push({ wrong: w, right: r });
+      if (w && r && w !== "無" && !isGrammarOnly(w, r)) fixes.push({ wrong: w, right: r });
     }
     return "";
   }).trim();
