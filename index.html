@@ -128,6 +128,11 @@ table.collo tr:last-child td{border-bottom:0}
 .sent-pat{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
 mark.typo{background:none;color:var(--hard);font-weight:700;text-decoration:underline wavy var(--hard);text-underline-offset:3px;cursor:help}
 .typo-fix{color:var(--hard);font-family:var(--f-mono);font-size:12.5px}
+mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline #2f6db5;text-underline-offset:3px}
+.upg-alt{color:#2f6db5;font-size:.92em}
+.u-zh{font-weight:700;white-space:nowrap}
+.u-orig{color:var(--muted)}
+.u-better{font-weight:700;color:#2f6db5}
 .prompt-box{font-size:16.5px;line-height:1.65;background:var(--bg);border-radius:8px;padding:14px 16px;border:1px solid var(--line)}
 .outline{display:flex;flex-direction:column;gap:12px;font-size:15px}
 .outline h4{margin:0 0 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
@@ -151,6 +156,7 @@ mark.typo{background:none;color:var(--hard);font-weight:700;text-decoration:unde
     <button role="tab" id="tab-speak" aria-selected="true" data-tab="speak">口說</button>
     <button role="tab" id="tab-write" aria-selected="false" data-tab="write">寫作</button>
     <button role="tab" id="tab-collo" aria-selected="false" data-tab="collo">搭配詞</button>
+    <button role="tab" id="tab-upg" aria-selected="false" data-tab="upg">更好的說法</button>
     <button role="tab" id="tab-log" aria-selected="false" data-tab="log">紀錄</button>
   </nav>
 
@@ -172,6 +178,10 @@ mark.typo{background:none;color:var(--hard);font-weight:700;text-decoration:unde
 
   <section id="view-collo" hidden>
     <main class="panel" id="collo-panel"></main>
+  </section>
+
+  <section id="view-upg" hidden>
+    <main class="panel" id="upg-panel"></main>
   </section>
 
   <section id="view-log" hidden>
@@ -827,12 +837,40 @@ async function requestSpell(text) {
   } catch { return { message: "連不上伺服器，拼字沒有檢查。" }; }
 }
 // 把拼錯的字包成紅字，滑過去看正確拼法
+// 先標「更好的說法」（藍色＋括號），其餘部分再標拼字錯誤（紅色）
+function highlightEssay(text, typos, upgrades) {
+  const ups = (upgrades || []).filter(u => u.original).sort((a, b) => b.original.length - a.original.length);
+  if (!ups.length) return highlightTypos(text, typos);
+  const lower = text.toLowerCase();
+  const hits = [];
+  for (const u of ups) {
+    const i = lower.indexOf(u.original.toLowerCase());
+    if (i >= 0 && !hits.some(h => i < h.end && i + u.original.length > h.start)) hits.push({ start: i, end: i + u.original.length, u });
+  }
+  hits.sort((a, b) => a.start - b.start);
+  const out = [];
+  let pos = 0;
+  for (const h of hits) {
+    out.push(...highlightTypos(text.slice(pos, h.start), typos));
+    out.push(el("mark", { class: "upg", title: h.u.zh || "" }, text.slice(h.start, h.end)), el("span", { class: "upg-alt" }, ` (${h.u.better})`));
+    pos = h.end;
+  }
+  out.push(...highlightTypos(text.slice(pos), typos));
+  return out;
+}
 function highlightTypos(text, typos) {
   if (!typos || !typos.length) return [text];
   const map = new Map(typos.map(t => [t.wrong.toLowerCase(), t.right]));
   return text.split(/([A-Za-z’'-]+)/).map(part => map.has(part.toLowerCase())
     ? el("mark", { class: "typo", title: "→ " + map.get(part.toLowerCase()) }, part)
     : part);
+}
+async function requestUpgrade(text) {
+  try {
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "upgrade", text }) });
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? j : { message: j.message || "這次沒有找到更好的說法。" };
+  } catch { return { message: "連不上伺服器，沒有找更好的說法。" }; }
 }
 function renderWrPanel() {
   const p = $("#wr-panel"); p.replaceChildren();
@@ -898,11 +936,29 @@ function renderWrPanel() {
   const essayForSpell = essayText(data);
   const spStatus = el("p", { class: "status" });
   const paraBox = el("div", { class: "outline" });
+  const upKey = "upgrade:" + wrKey();
+  const upCache = store.get(upKey, null);
+  let curTypos = null, curUps = upCache && upCache.essay === essayForSpell ? upCache.upgrades : null;
+  const upStatus = el("p", { class: "status" });
   const drawParas = typos => {
-    paraBox.replaceChildren(...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, ...(t ? highlightTypos(t, typos) : ["（還沒寫）"])))));
+    if (typos !== undefined) curTypos = typos;
+    paraBox.replaceChildren(...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, ...(t ? highlightEssay(t, curTypos, curUps) : ["（還沒寫）"])))));
+    if (curUps && curUps.length) upStatus.textContent = `藍字是可以寫得更好的說法（${curUps.length} 個），括號裡是建議寫法，已存進「更好的說法」。`;
+    else if (curUps) upStatus.textContent = "";
+    typos = curTypos;
     if (typos && typos.length) spStatus.replaceChildren(`紅字是拼錯的字（${typos.length} 個）：`, ...typos.flatMap((t, i) => [i ? "、" : "", el("span", { class: "typo-fix" }, t.wrong + " → " + t.right)]));
     else if (typos) spStatus.textContent = "沒有找到拼字錯誤。";
   };
+  if (!curUps && wordCount(essayForSpell) >= 20) {
+    upStatus.textContent = "正在找可以寫得更好的說法…";
+    requestUpgrade(essayForSpell).then(r => {
+      if (!r.upgrades) { upStatus.textContent = r.message; return; }
+      store.set(upKey, { essay: essayForSpell, upgrades: r.upgrades });
+      addUpgrades(r.upgrades.map(u => ({ ...u, from: "寫作" })));
+      curUps = r.upgrades;
+      drawParas(undefined);
+    });
+  }
   if (spCache && spCache.essay === essayForSpell) drawParas(spCache.typos);
   else {
     drawParas(null);
@@ -917,7 +973,7 @@ function renderWrPanel() {
   }
   const outline = el("div", { class: "outline" },
     el("p", { class: words >= 250 ? "status" : "status warn-text" }, `共 ${words} 字${words >= 250 ? "" : "，不到 250 字，任務回應會被扣分"}`),
-    spStatus, paraBox);
+    spStatus, upStatus, paraBox);
   const checks = [
     "立場明確，引言和結論一致（雙面討論題結論一定要表態）",
     "每段只聚焦一個重點，段落安排符合這個題型的標準架構",
@@ -1081,6 +1137,62 @@ function renderCollo() {
       el("div", { class: "c-form" }, fw, fr, fn), el("div", { class: "btns", style: "align-items:center" }, add, msg)));
 }
 
+/* ---------- 更好的說法（自己寫過、可以寫更好的片語） ---------- */
+const MY_UPG_KEY = "myUpgrades";
+const UPG_STATE = { q: "" };
+let upgImportMsg = "";
+function myUpgrades() { return store.get(MY_UPG_KEY, []); }
+function addUpgrades(items) {
+  const m = myUpgrades();
+  let added = 0;
+  for (const it of items) {
+    const o = String(it.original || "").trim(), b = String(it.better || "").trim();
+    if (!o || !b || m.some(x => x.original.toLowerCase() === o.toLowerCase())) continue;
+    m.unshift({ zh: String(it.zh || "").trim(), original: o, better: b, from: it.from || "", ts: Date.now() });
+    added++;
+  }
+  store.set(MY_UPG_KEY, m);
+  return added;
+}
+function renderUpg() {
+  const p = $("#upg-panel"); p.replaceChildren();
+  const rows = myUpgrades();
+  const search = el("input", { type: "text", id: "upg-q", placeholder: "搜尋中文或英文", value: UPG_STATE.q });
+  const tbody = el("tbody");
+  const when = ts => ts ? new Date(ts).toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" }) : "";
+  const fill = () => {
+    const q = UPG_STATE.q.trim().toLowerCase();
+    const shown = rows.map((r, i) => [r, i]).filter(([r]) => !q || [r.zh, r.original, r.better].join(" ").toLowerCase().includes(q));
+    tbody.replaceChildren(...shown.map(([r, i]) => el("tr", {},
+      el("td", { class: "u-zh" }, r.zh || ""),
+      el("td", { class: "u-orig" }, r.original),
+      el("td", { class: "u-better" }, r.better),
+      el("td", { class: "c-cat" }, [r.from, when(r.ts)].filter(Boolean).join(" · ")),
+      el("td", {}, el("button", { class: "b", style: "font-size:12px;padding:2px 8px", onclick: () => { const m = myUpgrades(); m.splice(i, 1); store.set(MY_UPG_KEY, m); renderUpg(); } }, "刪除")))));
+    if (!shown.length) tbody.append(el("tr", {}, el("td", { colspan: "5", class: "c-ex" }, q ? "沒有符合的說法。" : "還沒有紀錄。寫作到「整篇文章」時，藍色標出的片語會自動存進來。")));
+  };
+  search.addEventListener("input", () => { UPG_STATE.q = search.value; fill(); });
+  fill();
+  const fz = el("input", { type: "text", id: "upg-zh", placeholder: "中文意思，例如 提供更多工作機會" });
+  const fo = el("input", { type: "text", id: "upg-orig", placeholder: "我原本寫，例如 provide more jobs" });
+  const fb2 = el("input", { type: "text", id: "upg-better", placeholder: "更好的寫法，例如 create more employment opportunities" });
+  const msg = el("span", { class: "status" });
+  const add = el("button", { class: "b primary", onclick: () => {
+    if (!fo.value.trim() || !fb2.value.trim()) { msg.textContent = "「我原本寫」和「更好的寫法」都要填。"; return; }
+    if (!addUpgrades([{ zh: fz.value, original: fo.value, better: fb2.value, from: "自己加的" }])) { msg.textContent = "表格裡已經有這個說法了。"; return; }
+    renderUpg();
+  } }, "加入表格");
+  p.append(
+    el("h2", { class: "q", style: "font-size:22px" }, "更好的說法"),
+    upgImportMsg ? el("p", { class: "status", style: "color:var(--accent)" }, upgImportMsg) : null,
+    el("p", { class: "note" }, `不算錯、但可以寫得更自然精準的片語，共 ${rows.length} 筆。寫作檢查時藍色標出的會自動存進來。`),
+    search,
+    el("div", { class: "c-wrap" }, el("table", { class: "collo" },
+      el("thead", {}, el("tr", {}, ["中文", "我原本寫", "更好的寫法", "來源", ""].map(h => el("th", {}, h)))), tbody)),
+    el("fieldset", {}, el("legend", {}, "自己加一筆"),
+      el("div", { class: "c-form" }, fz, fo, fb2), el("div", { class: "btns", style: "align-items:center" }, add, msg)));
+}
+
 /* ---------- 紀錄 ---------- */
 let remoteEssays = null, remoteSpeak = null;
 function renderLog() {
@@ -1114,11 +1226,12 @@ function renderLog() {
 document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => {
   stopTimer();
   document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
-  for (const t of ["speak", "write", "collo", "log"]) $("#view-" + t).hidden = t !== b.dataset.tab;
+  for (const t of ["speak", "write", "collo", "upg", "log"]) $("#view-" + t).hidden = t !== b.dataset.tab;
   if (b.dataset.tab === "speak") renderSpPanel();
   if (b.dataset.tab === "write") renderWrite();
   if (b.dataset.tab === "log") renderLog();
   if (b.dataset.tab === "collo") renderCollo();
+  if (b.dataset.tab === "upg") renderUpg();
 }));
 function renderCountdown() {
   const d = Math.ceil((EXAM - new Date()) / 86400000);
