@@ -1058,6 +1058,7 @@ function addCollo(items) {
   for (const it of items) {
     const w = it.wrong.trim(), r = it.right.trim();
     if (!w || !r || m.some(x => x.wrong.toLowerCase() === w.toLowerCase())) continue;
+    if (it.from !== "自己加的" && isGrammarOnly(w, r)) continue;
     m.unshift({ wrong: w, right: r, note: (it.note || "").trim(), from: it.from || "", ts: Date.now() });
     added++;
   }
@@ -1154,6 +1155,9 @@ function colloWhy(r) {
   return [r.note || (pending ? "正在寫說明…" : ""), r.ex ? el("div", { class: "c-example" }, "例：" + r.ex) : null];
 }
 function renderCollo() {
+  // 只差單複數、字尾變化或冠詞的是文法錯誤，不留在搭配詞（自己手動加的不動）
+  const kept = myCollo().filter(x => x.from === "自己加的" || !isGrammarOnly(x.wrong, x.right));
+  if (kept.length !== myCollo().length) store.set(MY_COLLO_KEY, kept);
   fillColloNotes();
   const p = $("#collo-panel"); p.replaceChildren();
   const rows = myCollo();
