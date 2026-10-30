@@ -102,6 +102,9 @@ table.collo tr:last-child td{border-bottom:0}
 .c-wrong{color:var(--hard);text-decoration:line-through;text-decoration-thickness:1px}
 .c-right{font-weight:700;color:var(--accent)}
 .c-ex{color:var(--muted);font-size:13px}
+.c-why{font-size:14px;line-height:1.6;min-width:220px}
+.frame .c-why{min-width:0;margin-top:4px;color:var(--fg)}
+.c-example{color:var(--muted);font-size:13px;margin-top:2px}
 .c-cat{font-size:12px;color:var(--muted);white-space:nowrap}
 .c-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 @media (max-width:640px){.c-form{grid-template-columns:minmax(0,1fr)}}
@@ -1093,6 +1096,7 @@ function showReview(fb, raw, from) {
   const box = el("div", { class: "frames", style: "margin-top:12px;white-space:normal" },
     el("span", { class: "frames-h" }, "這次用錯的說法 · 已自動存進我的搭配詞"),
     el("span", { class: "frame-n" }, "AI 偶爾會把原本正確的句子也列進來；不是你的錯就按「不是錯，移除」。"));
+  const notes = [];
   for (const fx of fixes) {
     const isNew = fresh.includes(fx);
     const btn = el("button", { class: "b frame-use" }, isNew ? "不是錯，移除" : "表格裡本來就有");
@@ -1102,13 +1106,55 @@ function showReview(fb, raw, from) {
       store.set(MY_COLLO_KEY, m);
       btn.textContent = "已移除"; btn.disabled = true;
     });
+    const why = el("div", { class: "c-why" });
+    notes.push([fx, why]);
     box.append(el("div", { class: "frame" },
-      el("div", {}, el("span", { class: "c-wrong" }, fx.wrong), " → ", el("span", { class: "c-right" }, fx.right)), btn));
+      el("div", {}, el("div", {}, el("span", { class: "c-wrong" }, fx.wrong), " → ", el("span", { class: "c-right" }, fx.right)), why), btn));
   }
   fb.append(box);
+  const drawWhy = () => notes.forEach(([fx, why]) => {
+    const row = myCollo().find(x => x.wrong.toLowerCase() === fx.wrong.toLowerCase());
+    why.replaceChildren(...(row ? colloWhy(row) : []));
+  });
+  const pend = fillColloNotes();
+  drawWhy();
+  pend.then(drawWhy);
 }
 
+async function requestExplain(items) {
+  try {
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "explain", items }) });
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? j : { message: j.message || "這次沒有寫出說明。" };
+  } catch { return { message: "連不上伺服器，沒有寫出說明。" }; }
+}
+// 還沒有說明的搭配詞請 AI 補上；每筆這次開網頁只試一次，失敗不會一直重試
+const colloTried = new Set();
+let colloExplaining = null;
+function fillColloNotes() {
+  if (colloExplaining) return colloExplaining;
+  const need = myCollo().filter(x => !x.note && !colloTried.has(x.wrong.toLowerCase())).slice(0, 15);
+  if (!need.length) return Promise.resolve();
+  need.forEach(x => colloTried.add(x.wrong.toLowerCase()));
+  colloExplaining = requestExplain(need.map(x => ({ wrong: x.wrong, right: x.right }))).then(r => {
+    colloExplaining = null;
+    if (!r.notes) return;
+    const m = myCollo();
+    for (const n of r.notes) {
+      const row = m.find(x => x.wrong.toLowerCase() === String(n.wrong).trim().toLowerCase());
+      if (row && !row.note) { row.note = [n.why, n.how].filter(Boolean).join(" "); row.ex = n.example || ""; }
+    }
+    store.set(MY_COLLO_KEY, m);
+    if (!$("#view-collo").hidden) renderCollo();
+  });
+  return colloExplaining;
+}
+function colloWhy(r) {
+  const pending = !r.note && colloTried.has(r.wrong.toLowerCase()) && colloExplaining;
+  return [r.note || (pending ? "正在寫說明…" : ""), r.ex ? el("div", { class: "c-example" }, "例：" + r.ex) : null];
+}
 function renderCollo() {
+  fillColloNotes();
   const p = $("#collo-panel"); p.replaceChildren();
   const rows = myCollo();
   const search = el("input", { type: "text", id: "collo-q", placeholder: "搜尋", value: COLLO_STATE.q });
@@ -1120,7 +1166,7 @@ function renderCollo() {
     tbody.replaceChildren(...shown.map(([r, i]) => el("tr", {},
       el("td", { class: "c-wrong" }, r.wrong),
       el("td", { class: "c-right" }, r.right),
-      el("td", {}, r.note || ""),
+      el("td", { class: "c-why" }, ...colloWhy(r)),
       el("td", { class: "c-cat" }, [r.from, when(r.ts)].filter(Boolean).join(" · ")),
       el("td", {}, el("button", { class: "b", style: "font-size:12px;padding:2px 8px", onclick: () => { const m = myCollo(); m.splice(i, 1); store.set(MY_COLLO_KEY, m); renderCollo(); } }, "刪除")))));
     if (!shown.length) tbody.append(el("tr", {}, el("td", { colspan: "5", class: "c-ex" }, q ? "沒有符合的說法。" : "還沒有紀錄。AI 批改時用錯的說法會自動出現在這裡。")));
@@ -1129,7 +1175,7 @@ function renderCollo() {
   fill();
   const fw = el("input", { type: "text", id: "my-wrong", placeholder: "錯誤說法，例如 it have" });
   const fr = el("input", { type: "text", id: "my-right", placeholder: "正確說法，例如 it has" });
-  const fn = el("input", { type: "text", id: "my-note", placeholder: "說明或例句（可不填）" });
+  const fn = el("input", { type: "text", id: "my-note", placeholder: "為什麼錯（可不填，AI 會補）" });
   const msg = el("span", { class: "status" });
   const add = el("button", { class: "b primary", onclick: () => {
     if (!fw.value.trim() || !fr.value.trim()) { msg.textContent = "錯誤和正確說法都要填。"; return; }
@@ -1142,7 +1188,7 @@ function renderCollo() {
     el("p", { class: "note" }, `只放自己犯過的錯，共 ${rows.length} 筆。AI 批改時用錯的說法會自動存進來，也可以在下面自己加。`),
     search,
     el("div", { class: "c-wrap" }, el("table", { class: "collo" },
-      el("thead", {}, el("tr", {}, ["我說的", "正確說法", "說明", "來源", ""].map(h => el("th", {}, h)))), tbody)),
+      el("thead", {}, el("tr", {}, ["我用錯的", "更好的說法", "為什麼不能用、怎麼用", "來源", ""].map(h => el("th", {}, h)))), tbody)),
     el("fieldset", {}, el("legend", {}, "自己加一筆"),
       el("div", { class: "c-form" }, fw, fr, fn), el("div", { class: "btns", style: "align-items:center" }, add, msg)));
 }
