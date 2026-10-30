@@ -380,7 +380,9 @@ const accentName = lang => (ACCENTS.find(a => a[0].toLowerCase() === lang.replac
 let voices = [], voiceByKey = {};
 SP.accent = store.get("accent", "mix");
 SP.rate = store.get("rate", 1);
-function loadVoices() { voices = canSpeak ? speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang)) : []; }
+// Mac、iPhone 內建一些唱歌、氣泡、機器人之類的特效聲音，抽到會像怪聲，全部排除
+const ODD_VOICES = /\b(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Ralph|Fred|Junior|Kathy|Princess|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley)\b/i;
+function loadVoices() { voices = canSpeak ? speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang) && !ODD_VOICES.test(v.name)) : []; }
 if (canSpeak) { loadVoices(); speechSynthesis.addEventListener("voiceschanged", () => { loadVoices(); if (SP.listen) renderSpFilters(); }); }
 function voiceFor(key) {
   if (SP.accent !== "mix") {
@@ -397,17 +399,25 @@ function voiceFor(key) {
   return voiceByKey[key];
 }
 for (const ev of ["pointerdown", "keydown"]) document.addEventListener(ev, () => { userActed = true; }, { capture: true });
+let sayTimer = 0;
 function say(text, key, info) {
   if (!canSpeak) return;
   speechSynthesis.cancel();
+  clearTimeout(sayTimer);
   if (!voices.length) loadVoices();
-  const u = new SpeechSynthesisUtterance(text);
   const v = voiceFor(key);
-  if (v) u.voice = v;
-  u.lang = v ? v.lang : "en-GB";
-  u.rate = SP.rate;
-  speechSynthesis.speak(u);
   if (info) info.textContent = v ? `這題口音：${accentName(v.lang)}` : "";
+  // 剛 cancel 馬上 speak 在 Chrome、Edge 常會爆音或吃掉開頭，稍等一下再念；一句一句念，避免長題目念到一半斷掉
+  const parts = text.match(/[^.?!:\n]+[.?!:]?/g)?.map(x => x.trim()).filter(Boolean) || [text];
+  sayTimer = setTimeout(() => {
+    for (const part of parts) {
+      const u = new SpeechSynthesisUtterance(part);
+      if (v) u.voice = v;
+      u.lang = v ? v.lang : "en-GB";
+      u.rate = SP.rate;
+      speechSynthesis.speak(u);
+    }
+  }, 150);
 }
 const EXAMINER = {
   1: "真實考試 Part 1：聽不清楚可以請考官重複一次，但考官不會換句話解釋。練習時盡量只聽一到兩次。",
