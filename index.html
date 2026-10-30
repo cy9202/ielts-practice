@@ -818,11 +818,11 @@ function compareView(data, r) {
   const n = Math.max(left.length, right.length);
   const grid = el("div", { class: "cmp" },
     el("div", { class: "cmp-h" }, `我的文章 · ${wordCount(essayText(data))} 字`),
-    el("div", { class: "cmp-h cmp-r" }, `改寫範文 · ${r.words} 字${r.paragraphs ? " · 每句下面是作用和句型" : ""}`));
+    el("div", { class: "cmp-h cmp-r" }, `7 分範文 · ${r.words} 字${r.paragraphs ? " · 每句下面是作用和句型" : ""}`));
   for (let i = 0; i < n; i++) {
     grid.append(
       el("div", { class: "cmp-c", "data-label": "我的文章" }, left[i] || ""),
-      el("div", { class: "cmp-c cmp-r", "data-label": "改寫範文" }, right[i] || ""));
+      el("div", { class: "cmp-c cmp-r", "data-label": "7 分範文" }, right[i] || ""));
   }
   return el("div", { style: "display:flex;flex-direction:column;gap:12px;white-space:normal" },
     grid,
@@ -1002,7 +1002,7 @@ function renderWrPanel() {
     store.set(rwKey, { essay, r });
     rw.replaceChildren(compareView(data, r));
     rwBtn.textContent = "重新改寫一篇";
-  } }, !cached ? "依我的文章改寫範文" : cached.essay !== essayNow ? "依修改後的文章重新改寫" : "重新改寫一篇");
+  } }, !cached ? "依我的文章改寫 7 分範文" : cached.essay !== essayNow ? "依修改後的文章重新改寫" : "重新改寫一篇");
   const fb = el("div", { class: "feedback", hidden: true });
   const status = el("span", { class: "status" });
   const askBtn = el("button", { class: "b", onclick: async () => {
