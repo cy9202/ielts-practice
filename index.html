@@ -953,6 +953,12 @@ function renderWrPanel() {
     if (typos && typos.length) spStatus.replaceChildren(`紅字是拼錯的字（${typos.length} 個）：`, ...typos.flatMap((t, i) => [i ? "、" : "", el("span", { class: "typo-fix" }, t.wrong + " → " + t.right)]));
     else if (typos) spStatus.textContent = "沒有找到拼字錯誤。";
   };
+  // 拼字和更好的說法：按「批改」後才檢查、顯示；這篇已經批改過就直接顯示
+  const reviewedKey = "reviewed:" + wrKey();
+  const reviewed = store.get(reviewedKey, "") === essayForSpell;
+  if (!reviewed) curUps = null;
+  const runChecks = () => {
+  store.set(reviewedKey, essayForSpell);
   if (!curUps && wordCount(essayForSpell) >= 20) {
     upStatus.textContent = "正在找可以寫得更好的說法…";
     requestUpgrade(essayForSpell).then(r => {
@@ -975,6 +981,9 @@ function renderWrPanel() {
       });
     }
   }
+  };
+  if (reviewed) runChecks();
+  else drawParas(null);
   const outline = el("div", { class: "outline" },
     el("p", { class: words >= 250 ? "status" : "status warn-text" }, `共 ${words} 字${words >= 250 ? "" : "，不到 250 字，任務回應會被扣分"}`),
     spStatus, upStatus, paraBox);
@@ -1010,6 +1019,7 @@ function renderWrPanel() {
   const status = el("span", { class: "status" });
   const askBtn = el("button", { class: "b", onclick: async () => {
     askBtn.disabled = true; fb.hidden = false; fb.textContent = "AI 批改中，大約 10–20 秒…";
+    runChecks();
     const text = `題型判斷：${TYPES[data.kind] || "未選"}\n立場：${data.stance || ""}\n\n文章：\n${essayText(data)}`;
     showReview(fb, await aiReview({ kind: "writing", type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: text }), "寫作");
     askBtn.disabled = false;
@@ -1229,7 +1239,7 @@ function renderUpg() {
       el("td", { class: "u-better" }, r.better),
       el("td", { class: "c-cat" }, [r.from, when(r.ts)].filter(Boolean).join(" · ")),
       el("td", {}, el("button", { class: "b", style: "font-size:12px;padding:2px 8px", onclick: () => { const m = myUpgrades(); m.splice(i, 1); store.set(MY_UPG_KEY, m); renderUpg(); } }, "刪除")))));
-    if (!shown.length) tbody.append(el("tr", {}, el("td", { colspan: "5", class: "c-ex" }, q ? "沒有符合的說法。" : "還沒有紀錄。寫作到「整篇文章」時，藍色標出的片語會自動存進來。")));
+    if (!shown.length) tbody.append(el("tr", {}, el("td", { colspan: "5", class: "c-ex" }, q ? "沒有符合的說法。" : "還沒有紀錄。寫作按「批改」後，藍色標出的片語會自動存進來。")));
   };
   search.addEventListener("input", () => { UPG_STATE.q = search.value; fill(); });
   fill();
@@ -1245,7 +1255,7 @@ function renderUpg() {
   p.append(
     el("h2", { class: "q", style: "font-size:22px" }, "更好的說法"),
     upgImportMsg ? el("p", { class: "status", style: "color:var(--accent)" }, upgImportMsg) : null,
-    el("p", { class: "note" }, `不算錯、但可以寫得更自然精準的片語，共 ${rows.length} 筆。寫作檢查時藍色標出的會自動存進來。`),
+    el("p", { class: "note" }, `不算錯、但可以寫得更自然精準的片語，共 ${rows.length} 筆。寫作按「批改」後藍色標出的會自動存進來。`),
     search,
     el("div", { class: "c-wrap" }, el("table", { class: "collo" },
       el("thead", {}, el("tr", {}, ["中文", "我原本寫", "更好的寫法", "來源", ""].map(h => el("th", {}, h)))), tbody)),
