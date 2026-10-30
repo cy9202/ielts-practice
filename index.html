@@ -132,12 +132,12 @@ table.collo tr:last-child td{border-bottom:0}
 mark.typo{background:none;color:var(--hard);font-weight:700;text-decoration:underline wavy var(--hard);text-underline-offset:3px;cursor:help}
 .typo-alt{color:var(--hard);font-size:.92em}
 .typo-fix{color:var(--hard);font-family:var(--f-mono);font-size:12.5px}
-mark.gfix{background:#f6e7a6;color:inherit;border-radius:3px;padding:0 2px}
-.gfix-alt{background:#fbf3cf;color:#6b5a12;font-weight:700;border-radius:3px;padding:0 2px}
+.g-ins{color:#b8860b;font-weight:700}
+.g-del{color:var(--muted);text-decoration:line-through;text-decoration-color:#b8860b;text-decoration-thickness:2px}
 .gfix-list{font-size:14px;line-height:1.6;padding-left:20px;margin:10px 0 0}
 .gfix-list li{margin-bottom:6px}
 .gfix-o{color:var(--muted)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) mark.gfix{background:#5a4d1c}:root:not([data-theme="light"]) .gfix-alt{background:#3d3517;color:#f0dc8a}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .g-ins{color:#e8c25a}}
 mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline #2f6db5;text-underline-offset:3px}
 .upg-alt{color:#2f6db5;font-size:.92em}
 .u-zh{font-weight:700;white-space:nowrap}
@@ -848,6 +848,35 @@ async function requestSpell(text) {
 }
 // 把拼錯的字包成紅字，滑過去看正確拼法
 // 先標「更好的說法」（藍色＋括號），其餘部分再標拼字錯誤（紅色）
+// 原句和改好的句子逐字比對：一樣的字照常標紅字藍字；只差字尾就補上黃色字尾或劃掉多的字尾；其他要刪的劃掉、要加的寫黃字
+function diffWords(a, b, typos, ups) {
+  const A = a.split(/\s+/).filter(Boolean), B = b.split(/\s+/).filter(Boolean);
+  const n = A.length, m = B.length;
+  const L = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[i] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const segs = [], eq = [], dels = [], ins = [];
+  const ins1 = t => el("span", { class: "g-ins" }, t);
+  const del1 = t => el("span", { class: "g-del" }, t);
+  const flushEq = () => { if (eq.length) { segs.push(highlightEssay(eq.join(" "), typos, ups)); eq.length = 0; } };
+  const flushChg = () => {
+    if (dels.length && dels.length === ins.length) dels.forEach((d, k) => {
+      const w = ins[k];
+      segs.push(w.toLowerCase().startsWith(d.toLowerCase()) && w.length > d.length ? [d, ins1(w.slice(d.length))]
+        : d.toLowerCase().startsWith(w.toLowerCase()) && d.length > w.length ? [w, del1(d.slice(w.length))]
+        : [del1(d), " ", ins1(w)]);
+    });
+    else { dels.forEach(d => segs.push([del1(d)])); ins.forEach(w => segs.push([ins1(w)])); }
+    dels.length = 0; ins.length = 0;
+  };
+  let i = 0, j = 0;
+  while (i < n || j < m) {
+    if (i < n && j < m && A[i] === B[j]) { flushChg(); eq.push(A[i]); i++; j++; }
+    else if (j < m && (i >= n || L[i][j + 1] >= L[i + 1][j])) { flushEq(); ins.push(B[j++]); }
+    else { flushEq(); dels.push(A[i++]); }
+  }
+  flushEq(); flushChg();
+  return segs.flatMap((x, k) => k ? [" ", ...x] : x);
+}
 function highlightEssay(text, typos, upgrades, gfixes) {
   const gs = (gfixes || []).filter(g => g.original).map(g => ({ ...g, g: true }));
   const ups = (upgrades || []).filter(u => u.original).sort((a, b) => b.original.length - a.original.length);
@@ -863,7 +892,7 @@ function highlightEssay(text, typos, upgrades, gfixes) {
   let pos = 0;
   for (const h of hits) {
     out.push(...highlightTypos(text.slice(pos, h.start), typos));
-    if (h.u.g) out.push(el("mark", { class: "gfix", title: h.u.why || "" }, text.slice(h.start, h.end)), el("span", { class: "gfix-alt" }, ` → ${h.u.fixed}`));
+    if (h.u.g) out.push(el("span", { title: h.u.why || "" }, ...diffWords(text.slice(h.start, h.end), h.u.fixed, typos, upgrades)));
     else out.push(el("mark", { class: "upg", title: h.u.zh || "" }, text.slice(h.start, h.end)), el("span", { class: "upg-alt" }, ` (${h.u.better})`));
     pos = h.end;
   }
@@ -970,7 +999,7 @@ function renderWrPanel() {
     if (curUps && curUps.length) upStatus.textContent = `藍字是可以寫得更好的說法（${curUps.length} 個），括號裡是建議寫法，已存進「更好的說法」。`;
     else if (curUps) upStatus.textContent = "";
     if (curGr && curGr.length) {
-      grStatus.textContent = `黃底是文法錯誤或太長的句子（${curGr.length} 個），箭頭後面是改好的寫法，原因列在文章下面。`;
+      grStatus.textContent = `文法錯誤 ${curGr.length} 處：黃字是要補上或改成的字，劃掉的是要刪掉的字，原因列在文章下面。`;
       grList.replaceChildren(...curGr.map(g => el("li", {}, el("span", { class: "gfix-o" }, g.original), " → ", el("b", {}, g.fixed), g.why ? el("div", { class: "c-example" }, g.why) : null)));
     } else if (curGr) { grStatus.textContent = "沒有找到文法錯誤。"; grList.replaceChildren(); }
     typos = curTypos;
