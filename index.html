@@ -132,6 +132,12 @@ table.collo tr:last-child td{border-bottom:0}
 mark.typo{background:none;color:var(--hard);font-weight:700;text-decoration:underline wavy var(--hard);text-underline-offset:3px;cursor:help}
 .typo-alt{color:var(--hard);font-size:.92em}
 .typo-fix{color:var(--hard);font-family:var(--f-mono);font-size:12.5px}
+mark.gfix{background:#f6e7a6;color:inherit;border-radius:3px;padding:0 2px}
+.gfix-alt{background:#fbf3cf;color:#6b5a12;font-weight:700;border-radius:3px;padding:0 2px}
+.gfix-list{font-size:14px;line-height:1.6;padding-left:20px;margin:10px 0 0}
+.gfix-list li{margin-bottom:6px}
+.gfix-o{color:var(--muted)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) mark.gfix{background:#5a4d1c}:root:not([data-theme="light"]) .gfix-alt{background:#3d3517;color:#f0dc8a}}
 mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline #2f6db5;text-underline-offset:3px}
 .upg-alt{color:#2f6db5;font-size:.92em}
 .u-zh{font-weight:700;white-space:nowrap}
@@ -842,12 +848,13 @@ async function requestSpell(text) {
 }
 // 把拼錯的字包成紅字，滑過去看正確拼法
 // 先標「更好的說法」（藍色＋括號），其餘部分再標拼字錯誤（紅色）
-function highlightEssay(text, typos, upgrades) {
+function highlightEssay(text, typos, upgrades, gfixes) {
+  const gs = (gfixes || []).filter(g => g.original).map(g => ({ ...g, g: true }));
   const ups = (upgrades || []).filter(u => u.original).sort((a, b) => b.original.length - a.original.length);
-  if (!ups.length) return highlightTypos(text, typos);
+  if (!ups.length && !gs.length) return highlightTypos(text, typos);
   const lower = text.toLowerCase();
   const hits = [];
-  for (const u of ups) {
+  for (const u of [...gs, ...ups]) {
     const i = lower.indexOf(u.original.toLowerCase());
     if (i >= 0 && !hits.some(h => i < h.end && i + u.original.length > h.start)) hits.push({ start: i, end: i + u.original.length, u });
   }
@@ -856,7 +863,8 @@ function highlightEssay(text, typos, upgrades) {
   let pos = 0;
   for (const h of hits) {
     out.push(...highlightTypos(text.slice(pos, h.start), typos));
-    out.push(el("mark", { class: "upg", title: h.u.zh || "" }, text.slice(h.start, h.end)), el("span", { class: "upg-alt" }, ` (${h.u.better})`));
+    if (h.u.g) out.push(el("mark", { class: "gfix", title: h.u.why || "" }, text.slice(h.start, h.end)), el("span", { class: "gfix-alt" }, ` → ${h.u.fixed}`));
+    else out.push(el("mark", { class: "upg", title: h.u.zh || "" }, text.slice(h.start, h.end)), el("span", { class: "upg-alt" }, ` (${h.u.better})`));
     pos = h.end;
   }
   out.push(...highlightTypos(text.slice(pos), typos));
@@ -875,6 +883,13 @@ async function requestUpgrade(text) {
     const j = await r.json().catch(() => ({}));
     return r.ok ? j : { message: j.message || "這次沒有找到更好的說法。" };
   } catch { return { message: "連不上伺服器，沒有找更好的說法。" }; }
+}
+async function requestGrammar(text) {
+  try {
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "grammar", text }) });
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? j : { message: j.message || "這次沒有檢查到文法。" };
+  } catch { return { message: "連不上伺服器，沒有檢查文法。" }; }
 }
 function renderWrPanel() {
   const p = $("#wr-panel"); p.replaceChildren();
@@ -944,11 +959,20 @@ function renderWrPanel() {
   const upCache = store.get(upKey, null);
   let curTypos = null, curUps = upCache && upCache.essay === essayForSpell ? upCache.upgrades : null;
   const upStatus = el("p", { class: "status" });
+  const grKey = "grammar:" + wrKey();
+  const grCache = store.get(grKey, null);
+  let curGr = grCache && grCache.essay === essayForSpell ? grCache.fixes : null;
+  const grStatus = el("p", { class: "status" });
+  const grList = el("ol", { class: "gfix-list" });
   const drawParas = typos => {
     if (typos !== undefined) curTypos = typos;
-    paraBox.replaceChildren(...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, ...(t ? highlightEssay(t, curTypos, curUps) : ["（還沒寫）"])))));
+    paraBox.replaceChildren(...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, ...(t ? highlightEssay(t, curTypos, curUps, curGr) : ["（還沒寫）"])))));
     if (curUps && curUps.length) upStatus.textContent = `藍字是可以寫得更好的說法（${curUps.length} 個），括號裡是建議寫法，已存進「更好的說法」。`;
     else if (curUps) upStatus.textContent = "";
+    if (curGr && curGr.length) {
+      grStatus.textContent = `黃底是文法錯誤或太長的句子（${curGr.length} 個），箭頭後面是改好的寫法，原因列在文章下面。`;
+      grList.replaceChildren(...curGr.map(g => el("li", {}, el("span", { class: "gfix-o" }, g.original), " → ", el("b", {}, g.fixed), g.why ? el("div", { class: "c-example" }, g.why) : null)));
+    } else if (curGr) { grStatus.textContent = "沒有找到文法錯誤。"; grList.replaceChildren(); }
     typos = curTypos;
     if (typos && typos.length) spStatus.replaceChildren(`紅字是拼錯的字（${typos.length} 個）：`, ...typos.flatMap((t, i) => [i ? "、" : "", el("span", { class: "typo-fix" }, t.wrong + " → " + t.right)]));
     else if (typos) spStatus.textContent = "沒有找到拼字錯誤。";
@@ -956,9 +980,18 @@ function renderWrPanel() {
   // 拼字和更好的說法：按「批改」後才檢查、顯示；這篇已經批改過就直接顯示
   const reviewedKey = "reviewed:" + wrKey();
   const reviewed = store.get(reviewedKey, "") === essayForSpell;
-  if (!reviewed) curUps = null;
+  if (!reviewed) curUps = curGr = null;
   const runChecks = () => {
   store.set(reviewedKey, essayForSpell);
+  if (!curGr && wordCount(essayForSpell) >= 20) {
+    grStatus.textContent = "正在檢查文法和太長的句子…";
+    requestGrammar(essayForSpell).then(r => {
+      if (!r.fixes) { grStatus.textContent = r.message; return; }
+      store.set(grKey, { essay: essayForSpell, fixes: r.fixes });
+      curGr = r.fixes;
+      drawParas(undefined);
+    });
+  }
   if (!curUps && wordCount(essayForSpell) >= 20) {
     upStatus.textContent = "正在找可以寫得更好的說法…";
     requestUpgrade(essayForSpell).then(r => {
@@ -986,7 +1019,7 @@ function renderWrPanel() {
   else drawParas(null);
   const outline = el("div", { class: "outline" },
     el("p", { class: words >= 250 ? "status" : "status warn-text" }, `共 ${words} 字${words >= 250 ? "" : "，不到 250 字，任務回應會被扣分"}`),
-    spStatus, upStatus, paraBox);
+    grStatus, spStatus, upStatus, paraBox, grList);
   const checks = [
     "立場明確，引言和結論一致（雙面討論題結論一定要表態）",
     "每段只聚焦一個重點，段落安排符合這個題型的標準架構",
