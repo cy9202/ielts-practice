@@ -855,17 +855,31 @@ function diffWords(a, b, typos, ups) {
   const L = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[i] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
   const segs = [], eq = [], dels = [], ins = [];
+  const typoSet = new Set((typos || []).map(t => t.wrong.toLowerCase()));
   const ins1 = t => el("span", { class: "g-ins" }, t);
   const del1 = t => el("span", { class: "g-del" }, t);
   const flushEq = () => { if (eq.length) { segs.push(highlightEssay(eq.join(" "), typos, ups)); eq.length = 0; } };
   const flushChg = () => {
     if (dels.length && dels.length === ins.length) dels.forEach((d, k) => {
       const w = ins[k];
+      const bare = d.toLowerCase().replace(/[^a-z'-]/g, "");
+      if (typoSet.has(bare)) { segs.push(highlightTypos(d, typos)); return; }
       segs.push(w.toLowerCase().startsWith(d.toLowerCase()) && w.length > d.length ? [d, ins1(w.slice(d.length))]
         : d.toLowerCase().startsWith(w.toLowerCase()) && d.length > w.length ? [w, del1(d.slice(w.length))]
         : [del1(d), " ", ins1(w)]);
     });
-    else { dels.forEach(d => segs.push([del1(d)])); ins.forEach(w => segs.push([ins1(w)])); }
+    else {
+      const fixedWords = [];
+      dels.forEach(d => {
+        const t = (typos || []).find(x => x.wrong.toLowerCase() === d.toLowerCase().replace(/[^a-z'-]/g, ""));
+        if (t) { fixedWords.push(t.right.toLowerCase()); segs.push(highlightTypos(d, typos)); }
+        else segs.push([del1(d)]);
+      });
+      ins.forEach(w => {
+        const k = fixedWords.indexOf(w.toLowerCase().replace(/[^a-z'-]/g, ""));
+        if (k >= 0) fixedWords.splice(k, 1); else segs.push([ins1(w)]);
+      });
+    }
     dels.length = 0; ins.length = 0;
   };
   let i = 0, j = 0;
