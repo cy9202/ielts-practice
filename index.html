@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="雅思口說聽題練習（多國口音、考試語速、2026 年 9–12 月題庫）與寫作 Task 2 練習">
+<meta name="description" content="雅思口說聽題練習（多國口音、考試語速）與寫作 Task 2 練習，非官方免費工具">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>雅思練習室</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,8 +32,6 @@ body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15
 header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
 h1{font-family:var(--f-display);font-weight:700;font-size:28px;margin:0;letter-spacing:-.01em}
 .sub{color:var(--muted);font-size:13px;margin:2px 0 0}
-.countdown{font-family:var(--f-mono);font-size:13px;color:var(--muted);text-align:right}
-.countdown b{color:var(--accent);font-size:20px}
 nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
 nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font:inherit;font-weight:500;color:var(--muted);cursor:pointer}
 nav.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
@@ -152,6 +150,8 @@ mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline
 .rec details summary{cursor:pointer;font-weight:500}
 .status{font-size:12.5px;color:var(--muted)}
 .sub a,.about a{color:var(--accent)}
+.inapp{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--hard-soft);border:1px solid var(--hard);border-radius:8px;padding:10px 14px;font-size:14px}
+.inapp span{flex:1 1 240px}
 .about{border-top:1px solid var(--line);padding-top:16px;font-size:13px;line-height:1.7;color:var(--muted)}
 .about h2{font-size:14px;margin:0 0 6px;color:var(--fg)}
 .about p{margin:0 0 8px}
@@ -160,10 +160,14 @@ mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline
 </style>
 
 <div class="wrap">
+  <div id="inapp" class="inapp" hidden>
+    <span>你正在 App 內建的瀏覽器裡，錄音可能不能用，紀錄也可能不見。請按右上角選單改用瀏覽器開啟，或複製網址貼到 Safari、Chrome。</span>
+    <button class="b" id="inapp-copy">複製網址</button>
+  </div>
   <header>
     <div>
       <h1>雅思練習室</h1>
-      <p class="sub">口說一題一題練 · 寫作先寫立場和每段句子 · 題庫：2026 年 9–12 月</p>
+      <p class="sub">口說一題一題練 · 寫作先寫立場和每段句子</p>
       <p class="sub">非官方練習工具 · AI 分數只是估計 · <a href="#about">關於這個網站</a></p>
     </div>
   </header>
@@ -206,117 +210,117 @@ mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline
 
   <footer id="about" class="about">
     <h2>關於這個網站</h2>
-    <p><b>非官方：</b>這是個人製作的免費練習工具，與 IELTS 主辦單位（British Council、IDP、Cambridge University Press &amp; Assessment）沒有關係。題目不是官方試題，實際考試內容可能不同。AI 給的分數和建議只是估計，不代表正式成績。</p>
-    <p><b>你的資料：</b>按下 AI 批改、句型、改寫或錄音轉文字時，文章或錄音會送到 Cloudflare Workers AI 處理，本站不保存這些內容，所以請不要在裡面放個人資料。為了計算每日次數，本站會暫存 IP 的雜湊值，隔天清除，之後只留每天的總人數和總次數。本站也用 Cloudflare Web Analytics 統計造訪數與來源，不使用 cookie。練習紀錄、草稿和搭配詞只存在你這個瀏覽器，換裝置或清除瀏覽資料就會消失。</p>
-    <p><b>使用次數：</b>AI 功能靠免費額度運作，每人每天有上限，台灣時間早上 8 點恢復。同一個網路（例如學校 Wi-Fi）可能共用次數；全站額度用完時也會暫停。</p>
-    <p><b>來源：</b>口說題目依網路整理的 2026 年 9–12 月題庫主題重寫。寫作題目為考生回憶題，整理自 <a href="https://ieltswritingpractice.app" rel="noopener">ieltswritingpractice.app</a>，措辭可能有出入。寫作架構參考 <a href="https://ukus.tw" rel="noopener">ukus.tw</a>〈雅思寫作 Task 2 五大題型〉，高分寫法參考 <a href="https://www.ieltsadvantage.com" rel="noopener">ieltsadvantage.com</a> 的範文，評分依據為 <a href="https://ielts.org" rel="noopener">IELTS.org</a> 公開的評分標準。如果你是內容的權利人並希望移除，請到 <a href="https://github.com/cy9202/ielts-practice/issues" rel="noopener">GitHub</a> 留言。</p>
+    <p><b>非官方：</b>這是個人（GitHub 帳號 cy9202）製作的免費練習工具，與 IELTS 主辦單位（British Council、IDP、Cambridge University Press &amp; Assessment）沒有關係。所有題目都是本站撰寫的練習題，不是官方試題。AI 給的分數和建議只是估計，不代表正式成績。</p>
+    <p><b>蒐集什麼、為了什麼：</b>為了提供 AI 回饋，你按下批改、句型、改寫或錄音轉文字時，文章或錄音會送到 Cloudflare Workers AI 處理，本站不保存這些內容；請不要在裡面放姓名、聯絡方式等個人資料。為了計算每日次數，本站會暫存 IP 的雜湊值，隔天清除，之後只留每天的總人數和總用量。本站也用 Cloudflare Web Analytics 統計造訪數與來源，不使用 cookie。</p>
+    <p><b>你的權利：</b>不想提供錄音或文章，不要按 AI 功能就好，題目、計時和寫作都能照常用。練習紀錄、草稿和搭配詞只存在你這個瀏覽器，換裝置或清除瀏覽資料就會消失，可以到「紀錄」分頁匯出備份，也可以自己清除。iPhone 建議把網站加到主畫面。對資料有疑問或想要求處理，請到 <a href="https://github.com/cy9202/ielts-practice/issues" rel="noopener">GitHub</a> 留言。</p>
+    <p><b>使用次數：</b>AI 功能靠免費額度運作，每人每天有上限，台灣時間早上 8 點恢復。同一個網路（例如學校 Wi-Fi）可能共用次數；全站的公開額度用完時也會暫停到隔天。</p>
+    <p><b>參考來源：</b>口說話題參考網路上常見的雅思練習主題，口說和寫作題目都由本站撰寫。寫作架構參考 <a href="https://ukus.tw" rel="noopener">ukus.tw</a>〈雅思寫作 Task 2 五大題型〉，高分寫法參考 <a href="https://www.ieltsadvantage.com" rel="noopener">ieltsadvantage.com</a> 的範文，評分依據為 <a href="https://ielts.org" rel="noopener">IELTS.org</a> 公開的評分標準。如果你是內容的權利人並希望移除，請到 <a href="https://github.com/cy9202/ielts-practice/issues" rel="noopener">GitHub</a> 留言。</p>
   </footer>
 </div>
 
 <script>
-/* ---------- 題庫資料 ---------- */
-// 題目依第三方整理的 2026 年 9–12 月題庫主題重寫，實際考試措辭可能不同
+/* ---------- 練習題 ---------- */
+// 常見主題的練習題，題目由本站撰寫
 const P1 = [
  ["Work or studies","must",["Do you work or are you a student?","Why did you choose your major?","What is the most interesting part of your studies?","What do you plan to do after you graduate?"]],
  ["Home / accommodation","must",["Do you live in a house or an apartment?","Which room do you like most in your home?","What would you like to change about your home?","Do you plan to live there for a long time?"]],
  ["Hometown","must",["Where is your hometown?","What is your hometown famous for?","Has your hometown changed much in recent years?","Would you like to live there in the future?"]],
  ["The area you live in","must",["Do you like the area you live in?","What facilities are there near your home?","Is it a quiet or a busy area?","How could your area be improved?"]],
  ["The city you live in","must",["Which city do you live in now?","What do you like most about this city?","Is public transport convenient there?","Would you recommend this city to visitors?"]],
- ["Travelling","new",["Do you like travelling?","Who do you usually travel with?","What kind of places do you like to visit?","Is there a place you would like to travel to in the future?"]],
- ["Rubbish and recycling","new",["Do you recycle at home?","Is it easy to recycle where you live?","Did you learn about recycling at school?","What could people do to produce less rubbish?"]],
- ["Tiredness","new",["When do you usually feel tired?","What do you do when you feel tired?","Do you feel more tired now than when you were younger?","Do you think students today are more tired than before?"]],
- ["Shoes","new",["Do you like buying shoes?","What kind of shoes do you usually wear?","Have you ever bought shoes online?","Do you prefer comfortable shoes or fashionable shoes?"]],
- ["Politeness","new",["Do you think you are a polite person?","How do people show politeness in your culture?","Who taught you to be polite?","Are people today less polite than in the past?"]],
- ["Fruit and vegetables","new",["Do you eat a lot of fruit and vegetables?","What is your favourite fruit?","Did you like vegetables when you were a child?","Is it expensive to buy fresh fruit where you live?"]],
- ["Advertisement","new",["Do you pay attention to advertisements?","Where do you usually see advertisements?","Have you ever bought something because of an advert?","Do you think there are too many adverts today?"]],
- ["Paper","new",["Do you use a lot of paper in daily life?","Do you prefer reading on paper or on a screen?","Is paper still important for students?","How can people use less paper?"]],
- ["Secondary school","new",["Where did you go to secondary school?","What was your favourite subject there?","Do you still keep in touch with your classmates?","What did you dislike about secondary school?"]],
- ["Name","new",["What is your full name?","Does your name have a special meaning?","Who gave you your name?","Would you like to change your name?"]],
- ["Opportunities","new",["What opportunities do you have in your studies or work now?","Have you ever missed a good opportunity?","Do young people today have more opportunities than before?","How do you usually prepare for a new opportunity?"]],
- ["Music","ret",["What kind of music do you like?","When do you usually listen to music?","Did you learn to play an instrument as a child?","Has your taste in music changed over time?"]],
- ["Teachers","ret",["Do you remember your first teacher?","What makes a good teacher?","Would you like to be a teacher?","Have you ever had a teacher who changed your life?"]],
- ["Social media","ret",["Which social media apps do you use?","How much time do you spend on social media each day?","What do you usually post?","Do you think social media is good for young people?"]],
- ["Tidiness","ret",["Are you a tidy person?","How often do you clean your room?","Do you think it is important to keep your desk tidy?","Were you tidy when you were a child?"]],
- ["Websites","ret",["What websites do you visit most often?","Have you ever made your own website?","What makes a website easy to use?","Do you prefer using apps or websites?"]],
- ["Watch","ret",["Do you wear a watch?","Have you ever received a watch as a gift?","Why do some people wear expensive watches?","Do you think watches will disappear in the future?"]],
- ["Shopping","ret",["Do you enjoy shopping?","Do you prefer shopping online or in stores?","What was the last thing you bought?","Do you usually shop alone or with others?"]],
- ["Cars","ret",["Do you have a car?","Do you like travelling by car?","Is driving common where you live?","Would you like to buy an electric car?"]],
- ["Public gardens and parks","ret",["Do you often go to parks?","What do people usually do in parks in your city?","Was there a park near your home when you were young?","How could parks in your city be improved?"]],
- ["Science","ret",["Did you like science at school?","Which science subject interests you most?","Do you watch science programmes?","How does science affect your daily life?"]],
- ["Mirrors","ret",["Do you often look in the mirror?","Do you have many mirrors at home?","Have you ever bought a mirror?","Why do some buildings use mirrors or reflective glass?"]],
- ["Outer space and stars","ret",["Do you like looking at the stars?","Is it easy to see stars where you live?","Would you like to travel into space?","Did you learn about space as a child?"]],
- ["Singing","ret",["Do you like singing?","Have you ever taken singing lessons?","Is karaoke popular in your country?","Do you think everyone can learn to sing well?"]],
- ["Clothing","ret",["What kind of clothes do you usually wear?","Do you wear different clothes at weekends?","Do you care about fashion?","Where do you usually buy clothes?"]],
- ["Jokes & comedies","ret",["Do you like watching comedies?","Are you good at telling jokes?","What makes you laugh?","Do people in your country share jokes online?"]],
- ["Headphones","ret",["Do you use headphones?","What do you use headphones for?","Do you prefer wireless or wired headphones?","Is it rude to wear headphones while talking to someone?"]],
- ["Morning time","ret",["Are you a morning person?","What do you usually do in the morning?","Do you eat breakfast every day?","Is your morning routine different at weekends?"]],
- ["Feeling bored","sup",["When do you usually feel bored?","What do you do when you feel bored?","Did you often feel bored as a child?","Do you think feeling bored can be useful?"]],
+ ["Travelling","other",["Do you like travelling?","Who do you usually travel with?","What kind of places do you like to visit?","Is there a place you would like to travel to in the future?"]],
+ ["Rubbish and recycling","other",["Do you recycle at home?","Is it easy to recycle where you live?","Did you learn about recycling at school?","What could people do to produce less rubbish?"]],
+ ["Tiredness","other",["When do you usually feel tired?","What do you do when you feel tired?","Do you feel more tired now than when you were younger?","Do you think students today are more tired than before?"]],
+ ["Shoes","other",["Do you like buying shoes?","What kind of shoes do you usually wear?","Have you ever bought shoes online?","Do you prefer comfortable shoes or fashionable shoes?"]],
+ ["Politeness","other",["Do you think you are a polite person?","How do people show politeness in your culture?","Who taught you to be polite?","Are people today less polite than in the past?"]],
+ ["Fruit and vegetables","other",["Do you eat a lot of fruit and vegetables?","What is your favourite fruit?","Did you like vegetables when you were a child?","Is it expensive to buy fresh fruit where you live?"]],
+ ["Advertisement","other",["Do you pay attention to advertisements?","Where do you usually see advertisements?","Have you ever bought something because of an advert?","Do you think there are too many adverts today?"]],
+ ["Paper","other",["Do you use a lot of paper in daily life?","Do you prefer reading on paper or on a screen?","Is paper still important for students?","How can people use less paper?"]],
+ ["Secondary school","other",["Where did you go to secondary school?","What was your favourite subject there?","Do you still keep in touch with your classmates?","What did you dislike about secondary school?"]],
+ ["Name","other",["What is your full name?","Does your name have a special meaning?","Who gave you your name?","Would you like to change your name?"]],
+ ["Opportunities","other",["What opportunities do you have in your studies or work now?","Have you ever missed a good opportunity?","Do young people today have more opportunities than before?","How do you usually prepare for a new opportunity?"]],
+ ["Music","other",["What kind of music do you like?","When do you usually listen to music?","Did you learn to play an instrument as a child?","Has your taste in music changed over time?"]],
+ ["Teachers","other",["Do you remember your first teacher?","What makes a good teacher?","Would you like to be a teacher?","Have you ever had a teacher who changed your life?"]],
+ ["Social media","other",["Which social media apps do you use?","How much time do you spend on social media each day?","What do you usually post?","Do you think social media is good for young people?"]],
+ ["Tidiness","other",["Are you a tidy person?","How often do you clean your room?","Do you think it is important to keep your desk tidy?","Were you tidy when you were a child?"]],
+ ["Websites","other",["What websites do you visit most often?","Have you ever made your own website?","What makes a website easy to use?","Do you prefer using apps or websites?"]],
+ ["Watch","other",["Do you wear a watch?","Have you ever received a watch as a gift?","Why do some people wear expensive watches?","Do you think watches will disappear in the future?"]],
+ ["Shopping","other",["Do you enjoy shopping?","Do you prefer shopping online or in stores?","What was the last thing you bought?","Do you usually shop alone or with others?"]],
+ ["Cars","other",["Do you have a car?","Do you like travelling by car?","Is driving common where you live?","Would you like to buy an electric car?"]],
+ ["Public gardens and parks","other",["Do you often go to parks?","What do people usually do in parks in your city?","Was there a park near your home when you were young?","How could parks in your city be improved?"]],
+ ["Science","other",["Did you like science at school?","Which science subject interests you most?","Do you watch science programmes?","How does science affect your daily life?"]],
+ ["Mirrors","other",["Do you often look in the mirror?","Do you have many mirrors at home?","Have you ever bought a mirror?","Why do some buildings use mirrors or reflective glass?"]],
+ ["Outer space and stars","other",["Do you like looking at the stars?","Is it easy to see stars where you live?","Would you like to travel into space?","Did you learn about space as a child?"]],
+ ["Singing","other",["Do you like singing?","Have you ever taken singing lessons?","Is karaoke popular in your country?","Do you think everyone can learn to sing well?"]],
+ ["Clothing","other",["What kind of clothes do you usually wear?","Do you wear different clothes at weekends?","Do you care about fashion?","Where do you usually buy clothes?"]],
+ ["Jokes & comedies","other",["Do you like watching comedies?","Are you good at telling jokes?","What makes you laugh?","Do people in your country share jokes online?"]],
+ ["Headphones","other",["Do you use headphones?","What do you use headphones for?","Do you prefer wireless or wired headphones?","Is it rude to wear headphones while talking to someone?"]],
+ ["Morning time","other",["Are you a morning person?","What do you usually do in the morning?","Do you eat breakfast every day?","Is your morning routine different at weekends?"]],
+ ["Feeling bored","other",["When do you usually feel bored?","What do you do when you feel bored?","Did you often feel bored as a child?","Do you think feeling bored can be useful?"]],
 ];
 
-// [標題, 類別, 新/保留, 提示, Part 3 追問]
+// [標題, 類別, 分組, 提示, Part 3 追問]
 const PERSON = n => ["Who this person is","How you know this person",n,"And explain how you feel about this person"];
 const EVENT = (a,b) => ["When and where it happened","Who you were with",a,b||"And explain how you felt about it"];
 const PLACE = (a,b) => ["Where it is","When you went there",a,b||"And explain how you feel about this place"];
 const THING = (a,b) => ["What it is","When and how you came across it",a,b||"And explain why you feel this way about it"];
 const P2 = [
- ["Describe a person who did something difficult and succeeded","人物","new",PERSON("What difficult thing they did and how they succeeded"),["What qualities do people need to overcome difficulties?","Is success more about hard work or luck?","Should parents let children face difficulties on their own?"]],
- ["Describe a happy person you know","人物","new",PERSON("What this person usually does"),["What makes people happy in your country?","Are people today happier than in the past?","Can money buy happiness?"]],
- ["Describe a person who is well organized","人物","new",PERSON("How this person organizes things"),["Why are some people more organized than others?","Is being organized important at work?","Can technology help people become more organized?"]],
- ["Describe a person who likes taking photos","人物","new",PERSON("What kind of photos this person takes"),["Why do people take so many photos today?","Are professional photographers still needed?","Do photos help people remember the past?"]],
- ["Describe an older person you admire","人物","new",PERSON("What this person has done"),["What can young people learn from older people?","Do older people get enough respect today?","How has the role of grandparents changed?"]],
- ["Describe a person who is good at making things by hand","人物","new",PERSON("What this person makes"),["Are handmade things more valuable than machine-made ones?","Do children today learn practical skills?","Will handcrafts disappear in the future?"]],
- ["Describe a person who studies and loves history","人物","new",PERSON("What kind of history this person likes"),["Why is it important to learn history?","How can museums attract young people?","Should old buildings be preserved or replaced?"]],
- ["Describe a person who taught you a new skill","人物","new",PERSON("What skill they taught you and how"),["What is the best way to learn a new skill?","Is it better to learn from a teacher or from the internet?","Which skills will be important in the future?"]],
- ["Describe a popular person you know","人物","new",PERSON("Why this person is popular"),["What makes someone popular at school or work?","Is it important to be popular?","Why do some celebrities become popular very quickly?"]],
- ["Describe a sportsperson you admire","人物","new",PERSON("What this person has achieved"),["Should top athletes be paid so much?","Are sports stars good role models?","Why do some countries win more medals?"]],
- ["Describe a person who has healthy habits and a regular routine","人物","new",PERSON("What their habits and routine are"),["Why is it hard for people to keep healthy habits?","Should the government encourage healthy lifestyles?","Do young people sleep enough today?"]],
- ["Describe a noisy place you have been to","地點","new",PLACE("Why it was noisy"),["Is noise pollution a serious problem in cities?","How can city planners reduce noise?","Do young people mind noise less than older people?"]],
- ["Describe a natural place in your city","地點","new",PLACE("What you can do there"),["Why do cities need natural spaces?","Should cities build more parks or more housing?","How can people in cities stay connected with nature?"]],
- ["Describe a crowded place you have been to","地點","new",PLACE("Why it was crowded"),["Why do people go to crowded places?","How can cities manage crowds better?","Will cities become more crowded in the future?"]],
- ["Describe a short trip that you did not enjoy","地點","new",PLACE("What happened on the trip","And explain why you did not enjoy it"),["What makes a trip enjoyable?","Do people today travel more than before?","Is it better to plan a trip carefully or travel spontaneously?"]],
- ["Describe a building you enjoy visiting","地點","new",PLACE("What the building looks like","And explain why you enjoy visiting it"),["What makes a building attractive?","Should new buildings match the style of old ones?","How do public buildings affect people's daily lives?"]],
- ["Describe your least favourite movie","物品","new",THING("What the movie is about","And explain why you did not like it"),["Why do some films become popular despite bad reviews?","Do people trust online film reviews?","Will cinemas survive streaming services?"]],
- ["Describe an exciting book you have read","物品","new",THING("What the book is about"),["Do young people read less than before?","Are e-books better than paper books?","Should schools require students to read novels?"]],
- ["Describe an important decision you made that turned out well","事件","new",EVENT("What the decision was and why you made it","And explain why it turned out well"),["Who should young people ask for advice?","Do people make better decisions when they are older?","Is it better to decide quickly or slowly?"]],
- ["Describe a time you watched a famous person being interviewed","事件","new",EVENT("Who was interviewed and what they talked about"),["Why are people interested in celebrities' lives?","Do celebrities have a responsibility to society?","Are online interviews replacing TV interviews?"]],
- ["Describe a time you saved money for something special","事件","new",EVENT("What you saved for and how you saved"),["Should children be taught to save money?","Why do some people find it hard to save?","Is it better to save or to spend on experiences?"]],
- ["Describe a skill you learned as a child","事件","new",EVENT("What the skill was and who taught you","And explain how this skill helps you now"),["What skills should children learn at a young age?","Do children today have too many after-school classes?","Is it easier for children to learn than adults?"]],
- ["Describe a time you received good service in a shop","事件","new",EVENT("What you bought and what the staff did"),["What makes good customer service?","Will robots replace shop assistants?","Do people complain more about service today?"]],
- ["Describe an enjoyable evening you spent with friends","事件","new",EVENT("What you did together"),["How do young people usually spend time with friends?","Is it harder to make friends as an adult?","Has technology changed friendships?"]],
- ["Describe an activity that you think was a waste of time","事件","new",EVENT("What the activity was and why you did it","And explain why you think it was a waste of time"),["Why do people waste time?","Is social media a waste of time?","How can people manage their time better?"]],
- ["Describe a party that impressed you","事件","new",EVENT("What the party was for and what happened"),["Why do people hold parties?","Are parties today different from those in the past?","Should companies organize parties for employees?"]],
- ["Describe a time you helped someone solve a problem","事件","new",EVENT("What the problem was and how you helped"),["Should people always help strangers?","Do people today help each other less than before?","What problems do young people usually ask for help with?"]],
- ["Describe a person who enjoys growing plants","人物","ret",PERSON("What plants they grow"),["Why do people in cities like growing plants?","Should schools teach children to grow plants?","Can green roofs and vertical gardens improve cities?"]],
- ["Describe a childhood friend","人物","ret",PERSON("What you did together"),["Is it important to keep childhood friends?","How do children make friends?","Are online friends real friends?"]],
- ["Describe a person who wants to work in medicine","人物","ret",PERSON("Why they want this career"),["Why do many young people want to be doctors?","Should doctors earn more than other professionals?","How will technology change healthcare?"]],
- ["Describe a person who runs a successful business","人物","ret",PERSON("What the business is"),["What qualities does a business owner need?","Is it better to work for yourself or a company?","Should schools teach business skills?"]],
- ["Describe a person who is good at learning languages","人物","ret",PERSON("Which languages they speak and how they learned"),["Why do people learn foreign languages?","Is it better to learn a language at a young age?","Will translation apps replace language learning?"]],
- ["Describe a tall building you like or dislike","地點","ret",PLACE("What it looks like","And explain why you like or dislike it"),["Why do cities build skyscrapers?","Are tall buildings good places to live?","How do tall buildings change a city's character?"]],
- ["Describe a boring place you have visited","地點","ret",PLACE("What you did there","And explain why it was boring"),["What makes a place interesting to tourists?","Should old towns be redeveloped?","Do young people and old people like different places?"]],
- ["Describe a place you would recommend to visitors","地點","ret",PLACE("What visitors can do there","And explain why you would recommend it"),["How does tourism affect local people?","Should famous places limit the number of visitors?","Do travel apps make tourism better?"]],
- ["Describe a home you like to visit but would not want to live in","地點","ret",PLACE("Who lives there and what it is like","And explain why you would not want to live there"),["What makes a home comfortable?","Do people prefer houses or apartments in your country?","How will homes change in the future?"]],
- ["Describe an interesting video you watched","物品","ret",THING("What the video was about"),["Why are short videos so popular?","Can people learn useful things from videos?","Should children's screen time be limited?"]],
- ["Describe a new law you would like to introduce","物品","ret",THING("What the law would be","And explain why you think it is needed"),["Why do some people break laws?","Are fines an effective punishment?","Who should decide new laws?"]],
- ["Describe a live sports event you watched","事件","ret",EVENT("What the event was and what happened"),["Why do people enjoy watching live sports?","Should big sports events be held in developing countries?","Is watching sport on TV better than in person?"]],
- ["Describe a food you eat on special occasions","物品","ret",THING("What the food is and how it is made","And explain why it is eaten on special occasions"),["Are traditional foods disappearing?","Why do people eat together on festivals?","Is fast food changing family meals?"]],
- ["Describe an advertisement featuring a celebrity","物品","ret",THING("What product it advertised and who appeared in it"),["Why do companies use celebrities in adverts?","Should there be limits on adverts for children?","Do people trust influencer recommendations?"]],
- ["Describe a story or book about animals","物品","ret",THING("What happens in the story"),["Why do children like animal stories?","Should zoos exist?","How can people protect wild animals?"]],
- ["Describe an environmental law you know about","物品","ret",THING("What the law says and where it applies","And explain whether you think it works"),["Is the government or the individual more responsible for the environment?","Should plastic bags be banned?","Can cities grow without harming nature?"]],
- ["Describe a long-term goal you have","物品","ret",THING("What the goal is and when you set it","And explain why this goal matters to you"),["Is it important to set long-term goals?","Do young people today have clear goals?","Should parents set goals for their children?"]],
- ["Describe a piece of local news you heard","物品","ret",THING("What the news was about","And explain why it interested you"),["Do people prefer local or international news?","Can people trust news on social media?","Will newspapers disappear?"]],
- ["Describe a time you got up very early","事件","ret",EVENT("Why you got up early and what you did"),["Are morning people more productive?","Should schools start later?","How do people's sleep habits change with age?"]],
- ["Describe a time you had to change your plan","事件","ret",EVENT("What the plan was and why it changed"),["Is it important to be flexible?","Do people plan less than in the past?","How should people deal with unexpected changes?"]],
- ["Describe a time you worked in a group","事件","ret",EVENT("What the group did and what your role was"),["What makes teamwork successful?","Should schools give more group projects?","Is it better to work alone or in a team?"]],
- ["Describe a time you had a problem with a piece of technology","事件","ret",EVENT("What the problem was and how you solved it"),["Do people rely too much on technology?","Should older people learn new technology?","Will technology make life simpler or more complicated?"]],
- ["Describe a time you sent a message but got no reply","事件","ret",EVENT("Who you sent it to and why","And explain how you felt about not getting a reply"),["Is it rude not to reply to messages?","Do people communicate better now than before?","Do you prefer messaging or calling?"]],
- ["Describe a time you changed your opinion about something important","事件","ret",EVENT("What your opinion was and why it changed"),["Why do people change their opinions?","Do older people change their minds less easily?","Can the media change people's opinions?"]],
- ["Describe a recent change in your life","事件","ret",EVENT("What the change was and why it happened"),["Do people like changes?","What big changes happen in young people's lives?","Has your city changed a lot recently?"]],
- ["Describe a person who met difficulties but still succeeded","人物","sup",PERSON("What difficulties they faced and how they succeeded"),["Do failures help people succeed later?","Who should support people facing difficulties?","Are young people today afraid of failure?"]],
- ["Describe a problem you had using an electronic device","事件","sup",EVENT("What device it was and what went wrong"),["Why do electronic devices break so easily now?","Should companies make products easier to repair?","What do people do with old electronic devices?"]],
+ ["Describe a person who did something difficult and succeeded","人物","other",PERSON("What difficult thing they did and how they succeeded"),["What qualities do people need to overcome difficulties?","Is success more about hard work or luck?","Should parents let children face difficulties on their own?"]],
+ ["Describe a happy person you know","人物","other",PERSON("What this person usually does"),["What makes people happy in your country?","Are people today happier than in the past?","Can money buy happiness?"]],
+ ["Describe a person who is well organized","人物","other",PERSON("How this person organizes things"),["Why are some people more organized than others?","Is being organized important at work?","Can technology help people become more organized?"]],
+ ["Describe a person who likes taking photos","人物","other",PERSON("What kind of photos this person takes"),["Why do people take so many photos today?","Are professional photographers still needed?","Do photos help people remember the past?"]],
+ ["Describe an older person you admire","人物","other",PERSON("What this person has done"),["What can young people learn from older people?","Do older people get enough respect today?","How has the role of grandparents changed?"]],
+ ["Describe a person who is good at making things by hand","人物","other",PERSON("What this person makes"),["Are handmade things more valuable than machine-made ones?","Do children today learn practical skills?","Will handcrafts disappear in the future?"]],
+ ["Describe a person who studies and loves history","人物","other",PERSON("What kind of history this person likes"),["Why is it important to learn history?","How can museums attract young people?","Should old buildings be preserved or replaced?"]],
+ ["Describe a person who taught you a new skill","人物","other",PERSON("What skill they taught you and how"),["What is the best way to learn a new skill?","Is it better to learn from a teacher or from the internet?","Which skills will be important in the future?"]],
+ ["Describe a popular person you know","人物","other",PERSON("Why this person is popular"),["What makes someone popular at school or work?","Is it important to be popular?","Why do some celebrities become popular very quickly?"]],
+ ["Describe a sportsperson you admire","人物","other",PERSON("What this person has achieved"),["Should top athletes be paid so much?","Are sports stars good role models?","Why do some countries win more medals?"]],
+ ["Describe a person who has healthy habits and a regular routine","人物","other",PERSON("What their habits and routine are"),["Why is it hard for people to keep healthy habits?","Should the government encourage healthy lifestyles?","Do young people sleep enough today?"]],
+ ["Describe a noisy place you have been to","地點","other",PLACE("Why it was noisy"),["Is noise pollution a serious problem in cities?","How can city planners reduce noise?","Do young people mind noise less than older people?"]],
+ ["Describe a natural place in your city","地點","other",PLACE("What you can do there"),["Why do cities need natural spaces?","Should cities build more parks or more housing?","How can people in cities stay connected with nature?"]],
+ ["Describe a crowded place you have been to","地點","other",PLACE("Why it was crowded"),["Why do people go to crowded places?","How can cities manage crowds better?","Will cities become more crowded in the future?"]],
+ ["Describe a short trip that you did not enjoy","地點","other",PLACE("What happened on the trip","And explain why you did not enjoy it"),["What makes a trip enjoyable?","Do people today travel more than before?","Is it better to plan a trip carefully or travel spontaneously?"]],
+ ["Describe a building you enjoy visiting","地點","other",PLACE("What the building looks like","And explain why you enjoy visiting it"),["What makes a building attractive?","Should new buildings match the style of old ones?","How do public buildings affect people's daily lives?"]],
+ ["Describe your least favourite movie","物品","other",THING("What the movie is about","And explain why you did not like it"),["Why do some films become popular despite bad reviews?","Do people trust online film reviews?","Will cinemas survive streaming services?"]],
+ ["Describe an exciting book you have read","物品","other",THING("What the book is about"),["Do young people read less than before?","Are e-books better than paper books?","Should schools require students to read novels?"]],
+ ["Describe an important decision you made that turned out well","事件","other",EVENT("What the decision was and why you made it","And explain why it turned out well"),["Who should young people ask for advice?","Do people make better decisions when they are older?","Is it better to decide quickly or slowly?"]],
+ ["Describe a time you watched a famous person being interviewed","事件","other",EVENT("Who was interviewed and what they talked about"),["Why are people interested in celebrities' lives?","Do celebrities have a responsibility to society?","Are online interviews replacing TV interviews?"]],
+ ["Describe a time you saved money for something special","事件","other",EVENT("What you saved for and how you saved"),["Should children be taught to save money?","Why do some people find it hard to save?","Is it better to save or to spend on experiences?"]],
+ ["Describe a skill you learned as a child","事件","other",EVENT("What the skill was and who taught you","And explain how this skill helps you now"),["What skills should children learn at a young age?","Do children today have too many after-school classes?","Is it easier for children to learn than adults?"]],
+ ["Describe a time you received good service in a shop","事件","other",EVENT("What you bought and what the staff did"),["What makes good customer service?","Will robots replace shop assistants?","Do people complain more about service today?"]],
+ ["Describe an enjoyable evening you spent with friends","事件","other",EVENT("What you did together"),["How do young people usually spend time with friends?","Is it harder to make friends as an adult?","Has technology changed friendships?"]],
+ ["Describe an activity that you think was a waste of time","事件","other",EVENT("What the activity was and why you did it","And explain why you think it was a waste of time"),["Why do people waste time?","Is social media a waste of time?","How can people manage their time better?"]],
+ ["Describe a party that impressed you","事件","other",EVENT("What the party was for and what happened"),["Why do people hold parties?","Are parties today different from those in the past?","Should companies organize parties for employees?"]],
+ ["Describe a time you helped someone solve a problem","事件","other",EVENT("What the problem was and how you helped"),["Should people always help strangers?","Do people today help each other less than before?","What problems do young people usually ask for help with?"]],
+ ["Describe a person who enjoys growing plants","人物","other",PERSON("What plants they grow"),["Why do people in cities like growing plants?","Should schools teach children to grow plants?","Can green roofs and vertical gardens improve cities?"]],
+ ["Describe a childhood friend","人物","other",PERSON("What you did together"),["Is it important to keep childhood friends?","How do children make friends?","Are online friends real friends?"]],
+ ["Describe a person who wants to work in medicine","人物","other",PERSON("Why they want this career"),["Why do many young people want to be doctors?","Should doctors earn more than other professionals?","How will technology change healthcare?"]],
+ ["Describe a person who runs a successful business","人物","other",PERSON("What the business is"),["What qualities does a business owner need?","Is it better to work for yourself or a company?","Should schools teach business skills?"]],
+ ["Describe a person who is good at learning languages","人物","other",PERSON("Which languages they speak and how they learned"),["Why do people learn foreign languages?","Is it better to learn a language at a young age?","Will translation apps replace language learning?"]],
+ ["Describe a tall building you like or dislike","地點","other",PLACE("What it looks like","And explain why you like or dislike it"),["Why do cities build skyscrapers?","Are tall buildings good places to live?","How do tall buildings change a city's character?"]],
+ ["Describe a boring place you have visited","地點","other",PLACE("What you did there","And explain why it was boring"),["What makes a place interesting to tourists?","Should old towns be redeveloped?","Do young people and old people like different places?"]],
+ ["Describe a place you would recommend to visitors","地點","other",PLACE("What visitors can do there","And explain why you would recommend it"),["How does tourism affect local people?","Should famous places limit the number of visitors?","Do travel apps make tourism better?"]],
+ ["Describe a home you like to visit but would not want to live in","地點","other",PLACE("Who lives there and what it is like","And explain why you would not want to live there"),["What makes a home comfortable?","Do people prefer houses or apartments in your country?","How will homes change in the future?"]],
+ ["Describe an interesting video you watched","物品","other",THING("What the video was about"),["Why are short videos so popular?","Can people learn useful things from videos?","Should children's screen time be limited?"]],
+ ["Describe a new law you would like to introduce","物品","other",THING("What the law would be","And explain why you think it is needed"),["Why do some people break laws?","Are fines an effective punishment?","Who should decide new laws?"]],
+ ["Describe a live sports event you watched","事件","other",EVENT("What the event was and what happened"),["Why do people enjoy watching live sports?","Should big sports events be held in developing countries?","Is watching sport on TV better than in person?"]],
+ ["Describe a food you eat on special occasions","物品","other",THING("What the food is and how it is made","And explain why it is eaten on special occasions"),["Are traditional foods disappearing?","Why do people eat together on festivals?","Is fast food changing family meals?"]],
+ ["Describe an advertisement featuring a celebrity","物品","other",THING("What product it advertised and who appeared in it"),["Why do companies use celebrities in adverts?","Should there be limits on adverts for children?","Do people trust influencer recommendations?"]],
+ ["Describe a story or book about animals","物品","other",THING("What happens in the story"),["Why do children like animal stories?","Should zoos exist?","How can people protect wild animals?"]],
+ ["Describe an environmental law you know about","物品","other",THING("What the law says and where it applies","And explain whether you think it works"),["Is the government or the individual more responsible for the environment?","Should plastic bags be banned?","Can cities grow without harming nature?"]],
+ ["Describe a long-term goal you have","物品","other",THING("What the goal is and when you set it","And explain why this goal matters to you"),["Is it important to set long-term goals?","Do young people today have clear goals?","Should parents set goals for their children?"]],
+ ["Describe a piece of local news you heard","物品","other",THING("What the news was about","And explain why it interested you"),["Do people prefer local or international news?","Can people trust news on social media?","Will newspapers disappear?"]],
+ ["Describe a time you got up very early","事件","other",EVENT("Why you got up early and what you did"),["Are morning people more productive?","Should schools start later?","How do people's sleep habits change with age?"]],
+ ["Describe a time you had to change your plan","事件","other",EVENT("What the plan was and why it changed"),["Is it important to be flexible?","Do people plan less than in the past?","How should people deal with unexpected changes?"]],
+ ["Describe a time you worked in a group","事件","other",EVENT("What the group did and what your role was"),["What makes teamwork successful?","Should schools give more group projects?","Is it better to work alone or in a team?"]],
+ ["Describe a time you had a problem with a piece of technology","事件","other",EVENT("What the problem was and how you solved it"),["Do people rely too much on technology?","Should older people learn new technology?","Will technology make life simpler or more complicated?"]],
+ ["Describe a time you sent a message but got no reply","事件","other",EVENT("Who you sent it to and why","And explain how you felt about not getting a reply"),["Is it rude not to reply to messages?","Do people communicate better now than before?","Do you prefer messaging or calling?"]],
+ ["Describe a time you changed your opinion about something important","事件","other",EVENT("What your opinion was and why it changed"),["Why do people change their opinions?","Do older people change their minds less easily?","Can the media change people's opinions?"]],
+ ["Describe a recent change in your life","事件","other",EVENT("What the change was and why it happened"),["Do people like changes?","What big changes happen in young people's lives?","Has your city changed a lot recently?"]],
+ ["Describe a person who met difficulties but still succeeded","人物","other",PERSON("What difficulties they faced and how they succeeded"),["Do failures help people succeed later?","Who should support people facing difficulties?","Are young people today afraid of failure?"]],
+ ["Describe a problem you had using an electronic device","事件","other",EVENT("What device it was and what went wrong"),["Why do electronic devices break so easily now?","Should companies make products easier to repair?","What do people do with old electronic devices?"]],
 ];
 
-// 寫作 Task 2：2026 年 10 月考生回憶真題（第三方整理 ieltswritingpractice.app，措辭可能與實際略有出入）
-// [題型, 題目, 考試週]
+// 寫作 Task 2 練習題（本站自己寫的）：[題型, 題目]
 const TYPES = {opinion:"同意／不同意",discuss:"兩方觀點＋己見",advdis:"優點／缺點",posneg:"正面／負面發展",problem:"原因／解法",two:"雙問句"};
 // Task 2 各題型的標準段落架構（參考 ukus.tw〈雅思寫作 Task 2 五大題型〉整理；positive/negative 歸在優缺點題）
 const STRUCT = {
@@ -329,40 +333,39 @@ const STRUCT = {
 };
 const STRUCT_TIPS = "通用要求：立場要明確，不能整篇都「一方面…另一方面…」而不表態；每段只聚焦一個重點；例子用生活觀察或社會現象即可，要具體；開頭簡短概括題意；結論段不能省略。";
 const W2 = [
- ["advdis","Some cities have vehicle-free days when private cars, trucks, and motorcycles are banned from the city centre. People are encouraged to use public transportation such as buses, taxis, and metro on vehicle-free days. Do the advantages of having vehicle-free days outweigh the disadvantages?","10/19–10/25"],
- ["problem","Nowadays people use bicycles less as a form of transport. Why is that? What can we do to encourage people to use bicycles more?","10/19–10/25"],
- ["opinion","When asked to choose between a life without work and working most of the time, people would always choose not to work. Do you agree or disagree with this statement?","10/19–10/25"],
- ["posneg","Organized tours to remote areas and communities are increasingly popular. Is it a positive or negative development for the local people and the environment?","10/19–10/25"],
- ["discuss","Some people believe that studying at university or college is the best route to a successful career, while others believe that it is better to get a job straight after school. Discuss both views and give your opinion.","10/12–10/18"],
- ["opinion","The best way for a country to prepare for the future is to invest more resources in its young people. To what extent do you agree or disagree?","10/12–10/18"],
- ["discuss","Research has shown that the transportation of products and people is the main source of pollution. Some people believe the government should be in charge of this, while others believe it is the fault of individuals. Discuss both views and give your opinion.","10/12–10/18"],
- ["opinion","Historical objects should be brought back to their country of origin. To what extent do you agree or disagree?","10/12–10/18"],
- ["opinion","The best way to understand other cultures is to work for a multinational organisation. To what extent do you agree or disagree?","10/12–10/18"],
- ["discuss","Some people think that language should be taught in small classes, while other people think the number of students in a language class does not matter. Discuss both views and give your opinion.","10/12–10/18"],
- ["opinion","Caring for children is probably the most important job in any society. Because of this, all mothers and fathers should be required to take a course that prepares them to be good parents. To what extent do you agree or disagree with this view?","10/12–10/18"],
- ["discuss","Some believe that the government should support artists like musicians, painters, and poets, while others argue that this is a misuse of funds. Discuss both views and give your own opinion.","10/12–10/18"],
- ["opinion","Some people think employers should give their staff at least four weeks’ holiday per year to improve their job performance. To what extent do you agree or disagree with this statement?","10/12–10/18"],
- ["advdis","In the past, people stored knowledge in books. Nowadays, people store knowledge on the internet. Do the advantages of this development outweigh the disadvantages?","10/12–10/18"],
- ["posneg","Nowadays, sports is a big business with high earnings for professional sports people and companies involved both financially and in other ways. Is this a positive or negative development for sports?","10/12–10/18"],
- ["opinion","Some people think that giving children opportunities to act and make decisions independently is important. To what extent do you agree or disagree?","10/12–10/18"],
- ["discuss","Some people think that people should be given the right to use freshwater as they like. Others believe governments should strictly control the use of freshwater. Discuss both views and give your own opinion.","10/5–10/11"],
- ["two","Competitiveness is seen as a positive quality for people to have in many societies today. How does this competitiveness affect individuals? Is it a positive or negative quality?","10/5–10/11"],
- ["discuss","In many parts of the world, people do research on their family history. Some people believe that finding out about previous generations is a useful thing to do. However, others believe that it is better to focus on present and future generations. Discuss both views and give your opinion.","10/5–10/11"],
- ["opinion","All companies should provide sports and social facilities to the local community. To what extent do you agree or disagree?","10/5–10/11"],
- ["problem","Many offenders commit more crimes after serving their first punishment. Why is this happening, and what measures can be taken to tackle this problem?","10/5–10/11"],
- ["opinion","Some people think it is more important to spend public money on promoting a healthy lifestyle in order to prevent illness than to spend it on the treatment for people who are already ill. To what extent do you agree or disagree?","10/5–10/11"],
- ["problem","Many students find it harder to study when they are at university or college than when they were at school. Why is this? What can be done to solve the problem?","10/5–10/11"],
- ["discuss","Some people believe that children should do organized activities in their free time while others believe that children should be free to do what they want to do in their free time. Discuss both views and give your opinion.","10/5–10/11"],
- ["discuss","Some people think that the public health of a country can be improved if the government makes laws regarding nutritious food, but others think that it is a matter of personal choice and personal responsibility. Discuss both views and give your opinion.","10/1–10/4"],
- ["two","These days more fathers stay at home and take care of their children while mothers go out to work. What could be the reasons for this? Is it a positive or negative development?","10/1–10/4"],
- ["two","In the past, people used to travel to see the differences from their home country. However, the scenery in places around the world seems similar nowadays. What are the causes of these similarities? Do you think that the advantages of these similarities outweigh the disadvantages?","10/1–10/4"],
- ["two","Ambition is a positive quality for people to have in society today. How important is it for people who want to succeed in life? Is it a positive or negative characteristic?","10/1–10/4"],
- ["two","Today, people in many countries have to spend more and more time away from their families. Why is this happening? What effects does this have on the people themselves and on their families?","10/1–10/4"],
- ["opinion","Nowadays celebrities are more famous for their glamour and wealth than for their achievements, and this sets a bad example for young people. To what extent do you agree or disagree with this statement?","10/1–10/4"],
+ ["opinion","Public libraries should stop buying printed books and spend their budgets on digital resources instead. To what extent do you agree or disagree?"],
+ ["opinion","Every secondary school student should be required to do volunteer work in the local community. To what extent do you agree or disagree?"],
+ ["opinion","Companies that make packaged goods should pay the full cost of cleaning up the waste their products create. To what extent do you agree or disagree?"],
+ ["opinion","Museums and art galleries should be free for everyone, even if this means there is less money for new exhibitions. To what extent do you agree or disagree?"],
+ ["opinion","Working from home is better for employees than working in an office. To what extent do you agree or disagree?"],
+ ["opinion","New buildings in historic city centres should be designed to match the style of the old buildings around them. To what extent do you agree or disagree?"],
+ ["opinion","Governments should set limits on how much time children can spend on smartphones. To what extent do you agree or disagree?"],
+ ["opinion","Learning to cook should be a compulsory subject in all schools. To what extent do you agree or disagree?"],
+ ["opinion","Older workers are more valuable to a company than younger workers. To what extent do you agree or disagree?"],
+ ["discuss","Some people think cities should build more roads to reduce traffic, while others believe the money should go to public transport. Discuss both views and give your opinion."],
+ ["discuss","Some people believe students learn best in a classroom with a teacher, while others think online courses are just as effective. Discuss both views and give your opinion."],
+ ["discuss","Some people think foreign tourists should pay more than local residents to enter famous sites, while others believe everyone should pay the same price. Discuss both views and give your opinion."],
+ ["discuss","Some people believe zoos are necessary for protecting animals, while others think keeping animals in zoos is cruel. Discuss both views and give your opinion."],
+ ["discuss","Some people say success at work depends mostly on natural talent, while others believe hard work matters more. Discuss both views and give your opinion."],
+ ["discuss","Some people think it is better to live in a big city when you are young, while others prefer the life of a small town. Discuss both views and give your opinion."],
+ ["discuss","Some people believe governments should pay for university education, while others think students should pay for it themselves. Discuss both views and give your opinion."],
+ ["discuss","Some people think high-quality news should be free online, while others believe readers should pay for it. Discuss both views and give your opinion."],
+ ["advdis","More and more people now shop online rather than in local stores. Do the advantages of this trend outweigh the disadvantages?"],
+ ["advdis","Many young people now take a year off between finishing school and starting university. Do the advantages of this outweigh the disadvantages?"],
+ ["advdis","In many countries, a growing number of people are choosing to live alone. Do the advantages of this trend outweigh the disadvantages?"],
+ ["advdis","Many shops and restaurants now accept only cards or mobile payments instead of cash. Do the advantages of this outweigh the disadvantages?"],
+ ["posneg","Translation apps are now so good that some people no longer see a need to learn a foreign language. Is this a positive or negative development?"],
+ ["posneg","An increasing number of people are moving from the countryside to large cities. Is this a positive or negative development?"],
+ ["posneg","Many people now get most of their news from short videos on social media. Is this a positive or negative development?"],
+ ["problem","Many young adults find it very difficult to buy their first home in a big city. Why is this? What can be done to help them?"],
+ ["problem","In many countries, people are eating more processed food than ever before. What are the causes of this? What can be done to change it?"],
+ ["problem","Many small towns are losing their young people to larger cities. Why is this happening, and what measures could help these towns?"],
+ ["two","Many people today change jobs several times during their careers. Why is this? Is it a positive or negative trend?"],
+ ["two","Some people spend a lot of money on things mainly to impress others. Why do they do this? How does it affect them and society?"],
+ ["two","Fewer people read novels now than in the past. Why is this the case? Should anything be done about it?"],
 ];
 
 /* ---------- 狀態 ---------- */
-const EXAM = new Date("2026-11-25T08:30:00+08:00");
 const $ = s => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => {
   const n = document.createElement(tag);
@@ -382,8 +385,8 @@ const store = {
 let marks = store.get("marks", {});           // qid -> "done" | "hard"
 let db = null, sample = null;
 
-const LABEL = {new:"新題",ret:"保留",must:"必考",sup:"補充"};
-const SP = { mode: store.get("spMode", "p2"), only: store.get("spOnly", "all"), sel: null, step: 0, phase: "idle", listen: store.get("listen2", true) };
+const LABEL = {must:"基本話題",other:"其他話題"};
+const SP = { mode: store.get("spMode", "p2"), only: store.get("spOnly", "all") === "new" ? "all" : store.get("spOnly", "all"), sel: null, step: 0, phase: "idle", listen: store.get("listen2", true) };
 
 /* ---------- 聽題模式：題目先藏起來，用唸的 ---------- */
 const canSpeak = "speechSynthesis" in window;
@@ -413,6 +416,8 @@ function voiceFor(key) {
   return voiceByKey[key];
 }
 for (const ev of ["pointerdown", "keydown"]) document.addEventListener(ev, () => { userActed = true; }, { capture: true });
+// 請瀏覽器不要自動清掉練習資料（瀏覽器可以不答應）
+document.addEventListener("pointerdown", () => { try { navigator.storage.persist().catch(() => {}); } catch {} }, { once: true });
 let sayTimer = 0;
 function say(text, key, info) {
   if (!canSpeak) return;
@@ -420,7 +425,7 @@ function say(text, key, info) {
   clearTimeout(sayTimer);
   if (!voices.length) loadVoices();
   const v = voiceFor(key);
-  if (info) info.textContent = v ? `這題口音：${accentName(v.lang)}` : "";
+  if (info) info.textContent = v ? `這題口音：${accentName(v.lang)}` : "這台裝置找不到英文語音，可能念不出來；請直接看題目（聽題模式按「顯示題目」）。";
   // 剛 cancel 馬上 speak 在 Chrome、Edge 常會爆音或吃掉開頭，稍等一下再念；一句一句念，避免長題目念到一半斷掉
   const parts = text.match(/[^.?!:\n]+[.?!:]?/g)?.map(x => x.trim()).filter(Boolean) || [text];
   sayTimer = setTimeout(() => {
@@ -481,9 +486,13 @@ const mmss = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 /* ---------- AI 批改（Cloudflare Workers AI 免費模型） ---------- */
 const REVIEW_URL = "https://ielts-review.cy9202.workers.dev/review";
+function apiHeaders(type) {
+  const k = store.get("practiceKey", "");
+  return k ? { "Content-Type": type, "X-Practice-Key": k } : { "Content-Type": type };
+}
 async function aiReview(body) {
   try {
-    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: apiHeaders("application/json"), body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) return j.message || "AI 這次沒有回應，請稍後再試。";
     return j.text + (typeof j.left === "number" ? `
@@ -523,14 +532,14 @@ function recorder(onText) {
   const status = el("span", { class: "status" });
   const player = el("audio", { controls: true, hidden: true, style: "width:100%;max-width:420px;height:36px" });
   const node = el("div", { style: "display:flex;flex-direction:column;gap:6px" }, status, player);
-  if (!canRecord) status.textContent = "這個瀏覽器不能錄音，只會計時；請用 Chrome、Edge 或 Safari。";
+  if (!canRecord) status.textContent = "這個瀏覽器不能錄音，只會計時；請用 Chrome、Edge 或 Safari，也可以直接在下面打字。";
   let rec = null, chunks = [], stream = null, cap = null;
   const stop = () => { clearTimeout(cap); if (rec && rec.state === "recording") rec.stop(); };
   const start = async () => {
     if (!canRecord) return false;
     if (activeRec && activeRec !== stop) activeRec();
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { status.textContent = "沒有拿到麥克風權限，這次只計時。請在網址列左邊的鎖頭圖示允許麥克風。"; return false; }
+    catch { status.textContent = "沒有拿到麥克風權限，這次只計時。請到瀏覽器設定允許麥克風，也可以直接在下面打字。"; return false; }
     chunks = []; rec = new MediaRecorder(stream);
     rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     rec.onstop = async () => {
@@ -540,8 +549,10 @@ function recorder(onText) {
       player.src = URL.createObjectURL(blob); player.hidden = false;
       status.textContent = "轉文字中…";
       try {
-        const wav = await toWav16k(blob);
-        const r = await fetch(TRANSCRIBE_URL, { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav });
+        let wav;
+        try { wav = await toWav16k(blob); }
+        catch { status.textContent = "這個瀏覽器的錄音無法轉成文字。你可以回聽錄音，或直接在下面打字。"; return; }
+        const r = await fetch(TRANSCRIBE_URL, { method: "POST", headers: apiHeaders("audio/wav"), body: wav });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) status.textContent = j.message || "轉文字失敗，請再錄一次。";
         else { onText(j.text); status.textContent = "已轉成文字，放進下面的回答欄；上面可以回聽錄音。"; }
@@ -576,7 +587,6 @@ function speakItems() {
   return P2.map(([t, cat, k, bullets, p3], i) => ({ id: "p2-" + i, title: t.replace(/^Describe /, ""), full: t, cat, kind: k, bullets, p3 }));
 }
 function passFilter(it) {
-  if (SP.only === "new") return it.kind === "new";
   if (SP.only === "hard") return Object.keys(marks).some(k => k.startsWith(it.id + ":") && marks[k] === "hard") || marks[it.id] === "hard";
   if (SP.only === "todo") return !marks[it.id];
   return true;
@@ -600,13 +610,13 @@ function renderSpFilters() {
     f.append(acc, rate);
   }
   f.append(el("span", { style: "flex-basis:100%;height:0" }));
-  for (const [k, l] of [["all", "全部"], ["new", "只看新題"], ["todo", "還沒練"], ["hard", "不熟"]])
+  for (const [k, l] of [["all", "全部"], ["todo", "還沒練"], ["hard", "不熟"]])
     f.append(chip(l, SP.only === k, () => { SP.only = k; store.set("spOnly", k); renderSpeak(); }));
 }
 function renderSpList() {
   const list = $("#sp-list"); list.replaceChildren();
   const items = speakItems().filter(passFilter);
-  const groups = SP.mode === "p1" ? [["必考", "must"], ["新題", "new"], ["保留題", "ret"], ["補充", "sup"]] : [["人物", "人物"], ["地點", "地點"], ["物品", "物品"], ["事件", "事件"]];
+  const groups = SP.mode === "p1" ? [["基本話題", "must"], ["其他話題", "other"]] : [["人物", "人物"], ["地點", "地點"], ["物品", "物品"], ["事件", "事件"]];
   for (const [h, key] of groups) {
     const g = items.filter(it => (SP.mode === "p1" ? it.kind : it.cat) === key);
     if (!g.length) continue;
@@ -615,8 +625,7 @@ function renderSpList() {
       const st = marks[it.id];
       list.append(el("button", { class: "item", "aria-current": String(SP.sel === it.id), onclick: () => { SP.sel = it.id; SP.step = 0; SP.phase = "idle"; stopTimer(); renderSpeak(); } },
         el("span", { class: "dot " + (st || "") }),
-        el("span", { class: "t" }, it.title),
-        SP.mode === "p2" && it.kind === "new" ? el("span", { class: "tag" }, "新") : null));
+        el("span", { class: "t" }, it.title)));
     }
   }
   if (!items.length) list.append(el("p", { class: "note", style: "padding:12px" }, SP.only === "hard" ? "還沒有標成「不熟」的題目。" : "這個篩選沒有題目。"));
@@ -705,7 +714,7 @@ function renderSpPanel() {
     const startTalk = end => { phase.textContent = "開始說，講滿 2 分鐘"; runTimer({ seconds: 120, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s <= 15); }, onEnd: () => { end(); phase.textContent = "時間到，錄音已停止。考官會在這裡打斷你。"; } }); };
     const talkBtn = goButton(ans, "● 開始說（錄音＋計時 2 分鐘）", startTalk);
     p.append(
-      el("div", { class: "crumb" }, el("span", {}, "Part 2"), el("span", {}, "·"), el("span", {}, it.cat), el("span", { class: "tag" }, LABEL[it.kind])),
+      el("div", { class: "crumb" }, el("span", {}, "Part 2"), el("span", {}, "·"), el("span", {}, it.cat)),
       qBlock([el("h2", { class: "q" }, it.full),
         el("div", { class: "cue" }, el("p", {}, "You should say:"), el("ul", {}, it.bullets.map(b => el("li", {}, b))))],
         `Now, I'm going to give you a topic, and I'd like you to talk about it for one to two minutes. Before you talk, you'll have one minute to think about what you're going to say. You can make some notes if you wish. Here is your topic. ${it.full}. You should say: ${it.bullets.join(". ")}.`, 2),
@@ -766,7 +775,7 @@ const FIELDS = [
   ]],
 ];
 function wrPrompt() { return WR.sel === -1 ? store.get("customPrompt", "") : W2[WR.sel][1]; }
-function wrKey() { return "essay2:" + (WR.sel === -1 ? "custom" : WR.sel); }
+function wrKey() { return WR.sel === -1 ? "essay2:custom" : "essay3:" + WR.sel; }
 function renderWrFilters() {
   const f = $("#wr-filters"); f.replaceChildren();
   const chip = (k, l) => el("button", { class: "chip", "aria-pressed": String(WR.type === k), onclick: () => { WR.type = k; store.set("wrType", k); renderWrite(); } }, l);
@@ -776,7 +785,7 @@ function renderWrList() {
   const list = $("#wr-list"); list.replaceChildren();
   W2.forEach(([k, txt], i) => {
     if (WR.type !== "all" && WR.type !== k) return;
-    const saved = store.get("essay2:" + i, null);
+    const saved = store.get("essay3:" + i, null);
     list.append(el("button", { class: "item", "aria-current": String(WR.sel === i), onclick: () => { WR.sel = i; WR.step = 0; store.set("wrSel", i); renderWrite(); } },
       el("span", { class: "dot " + (saved && saved.done ? "done" : "") }),
       el("span", { class: "t" }, txt.length > 70 ? txt.slice(0, 70) + "…" : txt)));
@@ -816,7 +825,7 @@ function framesBar(data) {
 }
 async function requestFrames(body) {
   try {
-    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "frames", ...body }) });
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: apiHeaders("application/json"), body: JSON.stringify({ kind: "frames", ...body }) });
     const j = await r.json().catch(() => ({}));
     return r.ok ? j : { message: j.message || "這次沒有產生句型，請再按一次。" };
   } catch { return { message: "連不上伺服器，請檢查網路後再試。" }; }
@@ -827,7 +836,7 @@ function essayText(data) { return essayParas(data).map(([, t]) => t).filter(Bool
 function wordCount(t) { return (t.match(/[A-Za-z0-9’'-]+/g) || []).length; }
 async function requestRewrite(body) {
   try {
-    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "rewrite", ...body }) });
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: apiHeaders("application/json"), body: JSON.stringify({ kind: "rewrite", ...body }) });
     const j = await r.json().catch(() => ({}));
     return r.ok ? j : { message: j.message || "這次沒有寫出範文，請再按一次。" };
   } catch { return { message: "連不上伺服器，請檢查網路後再試。" }; }
@@ -865,7 +874,7 @@ function compareView(data, r) {
 }
 async function requestSpell(text) {
   try {
-    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "spell", text }) });
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: apiHeaders("application/json"), body: JSON.stringify({ kind: "spell", text }) });
     const j = await r.json().catch(() => ({}));
     return r.ok ? j : { message: j.message || "這次沒有檢查到拼字。" };
   } catch { return { message: "連不上伺服器，拼字沒有檢查。" }; }
@@ -946,14 +955,14 @@ function highlightTypos(text, typos) {
 }
 async function requestUpgrade(text) {
   try {
-    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "upgrade", text }) });
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: apiHeaders("application/json"), body: JSON.stringify({ kind: "upgrade", text }) });
     const j = await r.json().catch(() => ({}));
     return r.ok ? j : { message: j.message || "這次沒有找到更好的說法。" };
   } catch { return { message: "連不上伺服器，沒有找更好的說法。" }; }
 }
 async function requestGrammar(text) {
   try {
-    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "grammar", text }) });
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: apiHeaders("application/json"), body: JSON.stringify({ kind: "grammar", text }) });
     const j = await r.json().catch(() => ({}));
     return r.ok ? j : { message: j.message || "這次沒有檢查到文法。" };
   } catch { return { message: "連不上伺服器，沒有檢查文法。" }; }
@@ -973,7 +982,7 @@ function renderWrPanel() {
     cp.addEventListener("input", () => store.set("customPrompt", cp.value));
     head.push(el("label", { class: "f", for: "custom-prompt" }, "題目"), cp);
   } else {
-    head.push(el("div", { class: "crumb" }, el("span", {}, "Task 2"), el("span", {}, "·"), el("span", {}, TYPES[W2[WR.sel][0]]), el("span", {}, "·"), el("span", {}, "考生回憶 " + W2[WR.sel][2])),
+    head.push(el("div", { class: "crumb" }, el("span", {}, "Task 2"), el("span", {}, "·"), el("span", {}, TYPES[W2[WR.sel][0]])),
       el("div", { class: "prompt-box exam" },
         el("p", { class: "exam-h" }, "WRITING TASK 2"),
         el("p", {}, "You should spend about 40 minutes on this task."),
@@ -1234,7 +1243,7 @@ function showReview(fb, raw, from) {
 
 async function requestExplain(items) {
   try {
-    const r = await fetch(REVIEW_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "explain", items }) });
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: apiHeaders("application/json"), body: JSON.stringify({ kind: "explain", items }) });
     const j = await r.json().catch(() => ({}));
     return r.ok ? j : { message: j.message || "這次沒有寫出說明。" };
   } catch { return { message: "連不上伺服器，沒有寫出說明。" }; }
@@ -1365,6 +1374,37 @@ function renderUpg() {
 
 /* ---------- 紀錄 ---------- */
 let remoteEssays = null, remoteSpeak = null;
+// 備份這個瀏覽器裡的所有練習資料（專屬金鑰不放進去）
+function exportBackup() {
+  const data = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k.startsWith("ielts:") && k !== "ielts:practiceKey") data[k] = localStorage.getItem(k);
+    }
+  } catch { return "這個瀏覽器讀不到存檔，沒有匯出。"; }
+  const a = el("a", { href: URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" })), download: "ielts-backup-" + new Date().toISOString().slice(0, 10) + ".json" });
+  document.body.append(a); a.click(); a.remove();
+  return `已匯出 ${Object.keys(data).length} 項資料。`;
+}
+async function importBackup(f) {
+  try {
+    const data = JSON.parse(await f.text());
+    const keys = Object.keys(data).filter(k => k.startsWith("ielts:") && k !== "ielts:practiceKey" && typeof data[k] === "string");
+    if (!keys.length) return "這個檔案不是雅思練習室的備份。";
+    if (!window.confirm(`要匯入 ${keys.length} 項資料嗎？同一題的草稿和設定會被備份內容覆蓋。`)) return "";
+    keys.forEach(k => localStorage.setItem(k, data[k]));
+    location.reload();
+    return "";
+  } catch { return "這個檔案讀不出來，沒有匯入。"; }
+}
+function backupBox() {
+  const msg = el("span", { class: "status" });
+  const input = el("input", { type: "file", accept: "application/json,.json", hidden: true, onchange: async e => { if (e.target.files[0]) msg.textContent = await importBackup(e.target.files[0]); e.target.value = ""; } });
+  return el("div", { class: "btns", style: "align-items:center" },
+    el("button", { class: "b", onclick: () => { msg.textContent = exportBackup(); } }, "匯出備份"),
+    el("button", { class: "b", onclick: () => input.click() }, "匯入備份"), input, msg);
+}
 function renderLog() {
   const p = $("#log-panel"); p.replaceChildren();
   const essays = remoteEssays || store.get("wrLog", []);
@@ -1372,7 +1412,7 @@ function renderLog() {
   const hard = Object.entries(marks).filter(([, v]) => v === "hard").length;
   const done = Object.entries(marks).filter(([, v]) => v === "done").length;
   p.append(el("h2", { class: "q", style: "font-size:22px" }, "練習紀錄"),
-    el("p", { class: "note" }, `口說：練好 ${done} 題、不熟 ${hard} 題 · 寫作 ${essays.length} 篇 · ${db ? "存在雲端，Claude 在對話裡讀得到" : "只存在這台裝置的瀏覽器"}`));
+    el("p", { class: "note" }, `口說：練好 ${done} 題、不熟 ${hard} 題 · 寫作 ${essays.length} 篇 · ${db ? "存在雲端，Claude 在對話裡讀得到" : "只存在這個瀏覽器，建議定期匯出備份"}`), backupBox());
   const sec = (title, rows, fmt) => {
     const box = el("div", {}, el("h3", { style: "font-size:15px;margin:12px 0 0" }, title));
     if (!rows.length) box.append(el("p", { class: "note", style: "padding-top:8px" }, "還沒有紀錄。練完按「存到紀錄」就會出現在這裡。"));
@@ -1403,11 +1443,25 @@ document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("cl
   if (b.dataset.tab === "collo") renderCollo();
   if (b.dataset.tab === "upg") renderUpg();
 }));
-function renderCountdown() {
-  const d = Math.ceil((EXAM - new Date()) / 86400000);
-  $("#countdown").replaceChildren(d > 0 ? el("span", {}, "距離 11/25 考試 ", el("b", {}, String(d)), " 天") : el("span", {}, "考試日已過"));
-}
 renderSpeak();
+// Threads 的內建瀏覽器標記是 Barcelona；Android 內建瀏覽器有 "; wv)"，iOS 內建瀏覽器沒有 Safari 字樣
+(() => {
+  const ua = navigator.userAgent;
+  if (!/Barcelona|Instagram|FBAN|FBAV|FB_IAB|\bLine\/|MicroMessenger|; wv\)/i.test(ua) && !(/iPhone|iPad/.test(ua) && !/Safari/.test(ua))) return;
+  $("#inapp").hidden = false;
+  const btn = $("#inapp-copy");
+  btn.addEventListener("click", async () => {
+    const url = location.origin + location.pathname;
+    try { await navigator.clipboard.writeText(url); btn.textContent = "已複製"; }
+    catch { window.prompt("複製這個網址，貼到瀏覽器：", url); }
+  });
+})();
+(() => {
+  const m = location.hash.match(/^#key=([a-f0-9]{32})$/);
+  if (!m) return;
+  store.set("practiceKey", m[1]);
+  history.replaceState(null, "", location.pathname + location.search);
+})();
 // 個人匯入連結：只有拿到這個連結的人會把這些錯誤加進自己的表格
 (() => {
   const m = location.hash.match(/^#collo=([A-Za-z0-9_-]+)$/);
