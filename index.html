@@ -75,6 +75,7 @@ textarea,input[type=text],select{font:inherit;font-size:15px;color:var(--fg);bac
 textarea{resize:vertical;min-height:64px;line-height:1.55}
 .feedback{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px 16px;white-space:pre-wrap;font-size:14px;line-height:1.7}
 .note{font-size:12.5px;color:var(--muted);margin:0}
+.s7{border-left:3px solid var(--line);padding:4px 0 4px 14px}.s7 summary{cursor:pointer;font-size:14px;color:var(--muted)}.s7-text{line-height:1.7;margin:8px 0 6px}.s7 .note+.note{margin-top:4px}
 .steps{display:flex;gap:6px;flex-wrap:wrap}
 .step{font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:none;font-family:inherit;cursor:pointer}
 .step[aria-current="true"]{border-color:var(--accent);color:var(--accent);font-weight:500}
@@ -213,7 +214,7 @@ mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline
     <p><b>非官方：</b>這是個人（GitHub 帳號 cy9202）製作的免費練習工具，與 IELTS 主辦單位（British Council、IDP、Cambridge University Press &amp; Assessment）沒有關係。所有題目都是本站撰寫的練習題，不是官方試題。AI 給的分數和建議只是估計，不代表正式成績。</p>
     <p><b>蒐集什麼、為了什麼：</b>為了提供 AI 回饋，你按下批改、句型、改寫或錄音轉文字時，文章或錄音會送到 Cloudflare Workers AI 處理，本站不保存這些內容；請不要在裡面放姓名、聯絡方式等個人資料。為了計算每日次數，本站會暫存 IP 的雜湊值，隔天清除，之後只留每天的總人數和總用量。本站也用 Cloudflare Web Analytics 統計造訪數與來源，不使用 cookie。</p>
     <p><b>你的權利：</b>不想提供錄音或文章，不要按 AI 功能就好，題目、計時和寫作都能照常用。練習紀錄、草稿和搭配詞只存在你這個瀏覽器，換裝置或清除瀏覽資料就會消失，可以到「紀錄」分頁匯出備份，也可以自己清除。iPhone 建議把網站加到主畫面。對資料有疑問或想要求處理，請到 <a href="https://github.com/cy9202/ielts-practice/issues" rel="noopener">GitHub</a> 留言。</p>
-    <p><b>使用次數：</b>AI 功能靠免費額度運作，每人每天有上限，台灣時間早上 8 點恢復。同一個網路（例如學校 Wi-Fi）可能共用次數；全站的公開額度用完時也會暫停到隔天。</p>
+    <p><b>使用次數：</b>目前暫時不限次數。AI 功能靠免費額度運作，全站的免費額度用完時會暫停到隔天（台灣時間早上 8 點恢復）。</p>
     <p><b>參考來源：</b>口說話題參考網路上常見的雅思練習主題，口說和寫作題目都由本站撰寫。寫作架構參考 <a href="https://ukus.tw" rel="noopener">ukus.tw</a>〈雅思寫作 Task 2 五大題型〉，高分寫法參考 <a href="https://www.ieltsadvantage.com" rel="noopener">ieltsadvantage.com</a> 的範文，評分依據為 <a href="https://ielts.org" rel="noopener">IELTS.org</a> 公開的評分標準。如果你是內容的權利人並希望移除，請到 <a href="https://github.com/cy9202/ielts-practice/issues" rel="noopener">GitHub</a> 留言。</p>
   </footer>
 </div>
@@ -221,6 +222,46 @@ mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline
 <script>
 /* ---------- 練習題 ---------- */
 // 常見主題的練習題，題目由本站撰寫
+/* ---------- Part 1 的 7 分範例回答（建築系、台中、自己做音樂） ---------- */
+// 依題目主題和題號對應；每題 40–60 字、口語，附 2–3 個可以學的說法
+const SAMPLE7 = {
+  "Work or studies": [
+    ["I'm a student. I'm studying architecture at National Cheng Kung University, and I'm in my final year now. Most of my time is spent in the design studio, working on projects and building models, so it's pretty much my second home.", ["my second home", "most of my time is spent …"]],
+    ["I've always been curious about how people use space, like why some streets feel nice to walk along and others don't. Architecture lets me combine creativity with technical skills. It's demanding, and we pull all-nighters before reviews, but seeing a design turn into a real model is really rewarding.", ["combine creativity with technical skills", "pull all-nighters", "demanding but rewarding"]],
+    ["I'd say the final reviews. You have to explain your ideas to teachers and guest critics, and they often spot problems I completely missed. Recently I've also started using AI tools in my design process, which has opened up a lot of new possibilities for me.", ["spot problems I completely missed", "open up new possibilities"]],
+    ["I'm applying for master's programmes in the US at the moment. I'm hoping to focus on how technology, like AI, can be used in design. After that, I'd like to get some work experience abroad before eventually coming back to Taiwan.", ["at the moment", "get some work experience abroad", "eventually"]],
+  ],
+  "Hometown": [
+    ["I'm from Taichung, which is right in the middle of Taiwan's west coast. It's actually the second-largest city in the country, but it doesn't feel as crowded or rushed as Taipei, so I think it's a nice balance between city life and a slower pace.", ["right in the middle of …", "a nice balance between … and …"]],
+    ["It's probably best known for bubble tea, because a lot of people say it was invented there. Fengjia Night Market is really popular with tourists too. And for architecture students like me, the National Taichung Theater by Toyo Ito is a must-see, since its curved walls look nothing like a normal building.", ["best known for …", "a must-see", "look nothing like …"]],
+    ["Yes, quite a lot. When I was a kid there was no MRT at all, but now we have one line and more are on the way. Some districts have filled up with tall apartment towers, so the skyline looks completely different from ten years ago.", ["more are on the way", "filled up with …", "the skyline"]],
+    ["I think so, eventually. I'd like to study abroad first, but my family is in Taichung, and the cost of living is lower than in Taipei. Also, the city is still growing, so I feel there will be plenty of opportunities for architects there.", ["the cost of living", "the city is still growing", "plenty of opportunities"]],
+  ],
+  "The city you live in": [
+    ["I live in Taichung, in central Taiwan. It's where I grew up, so I know it pretty well. It's a big city, but it's quite spread out, so it rarely feels as packed as Taipei.", ["it's where I grew up", "quite spread out", "packed"]],
+    ["The weather, definitely. It's sunny most of the year, and we don't get hit by typhoons as often as other cities. I also love the Calligraphy Greenway, a long strip of park in the city centre where you can walk from one museum to another under the trees.", ["get hit by typhoons", "a long strip of park"]],
+    ["Honestly, not really. We only have one MRT line at the moment, and buses can be slow, so most people get around by scooter. It's getting better, though, and more lines are planned, so in ten years it might be a different story.", ["get around by scooter", "it's getting better, though", "a different story"]],
+    ["Yes, I would. It's more relaxed than Taipei, the food is great and cheap, and there are some really interesting modern buildings, like the opera house. I'd just tell visitors to rent a scooter or take taxis, because getting around without one can be a bit of a hassle.", ["a bit of a hassle", "I'd just tell visitors to …"]],
+  ],
+  "Music": [
+    ["I listen to quite a wide range, but mostly electronic music and R&B. Since I started making my own tracks, I pay much more attention to how a song is produced, like how the drums are mixed or how the sounds are layered, not just the melody.", ["quite a wide range", "make my own tracks", "how the sounds are layered"]],
+    ["Pretty much all the time, to be honest. I always have music on when I'm working in the studio, especially late at night, because it helps me stay focused. But when I need to think hard about a design problem, I switch to something without lyrics.", ["have music on", "stay focused", "switch to something without lyrics"]],
+    ["Not really. Like most kids in Taiwan, I only learned the recorder at school. I actually picked up the keyboard much later, when I started making music on my laptop. I taught myself mostly from YouTube tutorials, so my technique is far from perfect.", ["pick up (an instrument)", "taught myself", "far from perfect"]],
+    ["Yes, a lot. As a teenager I mostly listened to whatever was popular, like Mandopop. Now I'm more into electronic music, partly because I make it myself. Once you know how a track is built, you start to appreciate songs you'd probably have skipped before.", ["whatever was popular", "I'm more into …", "appreciate"]],
+  ],
+};
+function sample7Block(title, i) {
+  const s = (SAMPLE7[title] || [])[i];
+  if (!s) return null;
+  const [text, phrases] = s;
+  const words = text.split(/\s+/).length;
+  return el("details", { class: "s7" },
+    el("summary", {}, "看 7 分範例回答"),
+    el("p", { class: "s7-text" }, text),
+    el("p", { class: "note" }, `${words} 字 · 可以學的說法：${phrases.join("、")}`),
+    el("p", { class: "note" }, "7 分的樣子：直接回答再延伸 1–2 句、口語自然、有一兩個精準的搭配。範例內容（建築系、台中、自己做音樂）請換成你自己真的經驗，不要整段背。"));
+}
+
 const P1 = [
  ["Work or studies","must",["Do you work or are you a student?","Why did you choose your major?","What is the most interesting part of your studies?","What do you plan to do after you graduate?"]],
  ["Home / accommodation","must",["Do you live in a house or an apartment?","Which room do you like most in your home?","What would you like to change about your home?","Do you plan to live there for a long time?"]],
@@ -693,6 +734,7 @@ function renderSpPanel() {
       el("div", { class: "crumb" }, el("span", {}, "Part 1"), el("span", {}, "·"), el("span", {}, it.title), el("span", { class: "tag" }, LABEL[it.kind]), el("span", {}, `第 ${SP.step + 1} / ${it.qs.length} 題`)),
       qBlock([el("h2", { class: "q" }, q)], SP.step === 0 ? `Now, let's talk about ${it.title.toLowerCase()}. ${q}` : q, 1),
       el("p", { class: "note" }, "每題講 2–3 句，約 20–30 秒：直接回答 → 原因 → 小例子。"),
+      sample7Block(it.title, SP.step),
       el("div", { class: "timer-row" }, clock, phase), bar,
       el("div", { class: "btns" },
         goButton(ans, "● 開始作答（錄音＋計時）", () => { phase.textContent = "目標 20–30 秒"; runTimer({ seconds: 0, countUp: true, target: 30, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s > 40); } }); }),
