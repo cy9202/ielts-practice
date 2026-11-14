@@ -75,6 +75,7 @@ textarea,input[type=text],select{font:inherit;font-size:15px;color:var(--fg);bac
 textarea{resize:vertical;min-height:64px;line-height:1.55}
 .feedback{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px 16px;white-space:pre-wrap;font-size:14px;line-height:1.7}
 .note{font-size:12.5px;color:var(--muted);margin:0}
+.smp{border-left:3px solid var(--accent,var(--line));padding:4px 0 4px 14px}.smp .bg{width:100%;margin:6px 0}.smp-text{line-height:1.7;margin:8px 0 6px;white-space:pre-wrap}
 .s7{border-left:3px solid var(--line);padding:4px 0 4px 14px}.s7 summary{cursor:pointer;font-size:14px;color:var(--muted)}.s7-text{line-height:1.7;margin:8px 0 6px}.s7 .note+.note{margin-top:4px}
 .steps{display:flex;gap:6px;flex-wrap:wrap}
 .step{font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:none;font-family:inherit;cursor:pointer}
@@ -250,6 +251,31 @@ const SAMPLE7 = {
     ["Yes, a lot. As a teenager I mostly listened to whatever was popular, like Mandopop. Now I'm more into electronic music, partly because I make it myself. Once you know how a track is built, you start to appreciate songs you'd probably have skipped before.", ["whatever was popular", "I'm more into …", "appreciate"]],
   ],
 };
+/* ---------- 直接看範例回答（AI 產生，不用先作答） ---------- */
+function sampleBlock(qid, question, part) {
+  const key = "sample:" + qid;
+  const out = el("div");
+  const bg = el("input", { class: "bg", type: "text", placeholder: "我的背景（選填，例：建築系畢業、讀碩士、台中人、在申請美國研究所）" });
+  bg.value = store.get("myBg", "");
+  bg.addEventListener("input", () => store.set("myBg", bg.value));
+  const show = j => out.replaceChildren(
+    el("p", { class: "smp-text" }, j.answer),
+    el("p", { class: "note" }, `${j.words} 字 · 可以學的說法：` + (j.phrases || []).map(x => x.zh ? `${x.en}（${x.zh}）` : x.en).join("、")),
+    el("p", { class: "note" }, "內容請換成你自己的真實經驗，不要整段背。"));
+  const btn = el("button", { class: "b", onclick: async () => {
+    btn.disabled = true; out.replaceChildren(el("p", { class: "note" }, "產生中，約 10 秒…"));
+    try {
+      const r = await fetch(REVIEW_URL, { method: "POST", headers: apiHeaders("application/json"), body: JSON.stringify({ kind: "sample", part, question, bg: bg.value }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.answer) { store.set(key, j); show(j); btn.textContent = "換一個範例"; }
+      else out.replaceChildren(el("p", { class: "note" }, j.message || "這次沒有產生範例，請再按一次。"));
+    } catch { out.replaceChildren(el("p", { class: "note" }, "連不上伺服器，請稍後再試。")); }
+    btn.disabled = false;
+  } }, "直接看範例回答");
+  const cached = store.get(key, null);
+  if (cached && cached.answer) { show(cached); btn.textContent = "換一個範例"; }
+  return el("div", { class: "smp" }, bg, el("div", { class: "btns" }, btn), out);
+}
 function sample7Block(title, i) {
   const s = (SAMPLE7[title] || [])[i];
   if (!s) return null;
@@ -735,6 +761,7 @@ function renderSpPanel() {
       qBlock([el("h2", { class: "q" }, q)], SP.step === 0 ? `Now, let's talk about ${it.title.toLowerCase()}. ${q}` : q, 1),
       el("p", { class: "note" }, "每題講 2–3 句，約 20–30 秒：直接回答 → 原因 → 小例子。"),
       sample7Block(it.title, SP.step),
+      sampleBlock(qid, q, 1),
       el("div", { class: "timer-row" }, clock, phase), bar,
       el("div", { class: "btns" },
         goButton(ans, "● 開始作答（錄音＋計時）", () => { phase.textContent = "目標 20–30 秒"; runTimer({ seconds: 0, countUp: true, target: 30, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s > 40); } }); }),
@@ -766,6 +793,7 @@ function renderSpPanel() {
         talkBtn,
         el("button", { class: "b", onclick: () => { stopTimer(); SP.step = 1; renderSpPanel(); } }, "進入 Part 3 →"),
         ...markButtons(qid)),
+      sampleBlock(qid, `${it.full}. You should say: ${it.bullets.join("; ")}`, 2),
       el("label", { class: "f", for: "notes-" + qid }, "準備筆記"), notes,
       ans);
     clock.textContent = "1:00";
@@ -778,6 +806,7 @@ function renderSpPanel() {
     el("div", { class: "crumb" }, el("span", {}, "Part 3"), el("span", {}, "·"), el("span", {}, it.title), el("span", {}, `第 ${k + 1} / ${it.p3.length} 題`)),
     qBlock([el("h2", { class: "q" }, q)], k === 0 ? `We've been talking about ${it.title}, and I'd like to discuss with you one or two more general questions related to this. ${q}` : q, 3),
     el("p", { class: "note" }, "講 40–60 秒：觀點 → 原因 → 例子 → 讓步或對比（However, …）→ 回到觀點。"),
+    sampleBlock(qid, q, 3),
     el("div", { class: "timer-row" }, clock, phase), bar,
     el("div", { class: "btns" },
       goButton(ans, "● 開始作答（錄音＋計時）", () => { phase.textContent = "目標 40–60 秒"; runTimer({ seconds: 0, countUp: true, target: 60, render: (s, f) => { paint(s, f); clock.classList.toggle("warn", s > 75); } }); }),
