@@ -568,6 +568,67 @@ async function aiReview(body) {
   } catch { return "連不上批改伺服器，請檢查網路後再試。"; }
 }
 
+/* ---------- 錄音量流利度（在瀏覽器算，不用 AI 額度） ---------- */
+// 從錄音量流利度（和 calibration\speaking\fluency.py 同一套算法）：
+// 20ms 音框的音量 → 自適應門檻判斷有沒有在說話 → 從第一個聲音算到最後一個 → 停頓
+// 字數用 Whisper 逐字稿（不算 um/uh），語速＝字數 ÷ 說話時段
+// 換算（11/15 用 7 位考官評分的 Part 2 獨白校準：8 分 136–143 字/分，6.5 以下 91–104）
+const FLUENCY_FILLERS = new Set(["um", "uh", "uhm", "er", "ah", "hmm", "mm", "erm"]);
+function pctl(sorted, p) { // 同 numpy.percentile（線性內插）
+  const i = (sorted.length - 1) * p / 100, lo = Math.floor(i), hi = Math.ceil(i);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo);
+}
+function measurePauses(pcm, rate) {
+  const n = Math.round(0.02 * rate), m = Math.floor(pcm.length / n);
+  if (m < 10) return null;
+  const db = new Float64Array(m);
+  for (let f = 0; f < m; f++) {
+    let s = 0;
+    for (let j = f * n; j < (f + 1) * n; j++) s += pcm[j] * pcm[j];
+    db[f] = 20 * Math.log10(Math.sqrt(s / n) + 1e-9);
+  }
+  const sorted = Array.from(db).sort((a, b) => a - b);
+  const thr = Math.max(pctl(sorted, 10) + 10, pctl(sorted, 95) - 30);
+  let v = Array.from(db, d => d > thr);
+  const fill = (arr, val, k) => { // 補掉太短的空隙／雜音（頭尾不動）
+    const out = arr.slice();
+    for (let i = 0; i < out.length;) {
+      if (out[i] === val) {
+        let j = i; while (j < out.length && out[j] === val) j++;
+        if (j - i < k && i > 0 && j < out.length) for (let t = i; t < j; t++) out[t] = !val;
+        i = j;
+      } else i++;
+    }
+    return out;
+  };
+  v = fill(fill(v, false, 5), true, 3);
+  const first = v.indexOf(true), last = v.lastIndexOf(true);
+  if (first < 0) return null;
+  v = v.slice(first, last + 1);
+  const pauses = [];
+  for (let i = 0; i < v.length;) {
+    if (!v[i]) { let j = i; while (j < v.length && !v[j]) j++; const d = (j - i) * 0.02; if (d >= 0.25) pauses.push(d); i = j; }
+    else i++;
+  }
+  return { sec: v.length * 0.02, pauses };
+}
+function countWords(text) {
+  return (text.toLowerCase().match(/[a-z][a-z'’-]*/g) || []).filter(w => !FLUENCY_FILLERS.has(w)).length;
+}
+function fluencyBand(wpm, longPerMin) {
+  let b = wpm >= 130 ? 8 : wpm >= 115 ? 7 : wpm >= 100 ? 6 : wpm >= 85 ? 5 : 4;
+  if (longPerMin >= 6) b = Math.min(b, 5);
+  return b;
+}
+// 多段錄音合併：字數、秒數、長停頓相加
+function fluencyStats(parts) {
+  const words = parts.reduce((a, p) => a + p.words, 0), sec = parts.reduce((a, p) => a + p.sec, 0);
+  const long = parts.reduce((a, p) => a + p.long, 0);
+  if (sec < 8 || words < 15) return null; // 太短量不準
+  const wpm = Math.round(words / (sec / 60)), longPerMin = Math.round(long / (sec / 60) * 10) / 10;
+  return { words, sec: Math.round(sec), wpm, longPerMin, fc: fluencyBand(wpm, longPerMin) };
+}
+
 /* ---------- 錄音轉文字（Whisper，在 Cloudflare 上跑） ---------- */
 const TRANSCRIBE_URL = "https://ielts-review.cy9202.workers.dev/transcribe";
 const canRecord = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
@@ -591,7 +652,9 @@ async function toWav16k(blob) {
   v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
   w(36, "data"); v.setUint32(40, pcm.length * 2, true);
   for (let i = 0; i < pcm.length; i++) { const s = Math.max(-1, Math.min(1, pcm[i])); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true); }
-  return new Blob([buf], { type: "audio/wav" });
+  const out = new Blob([buf], { type: "audio/wav" });
+  out.pcm = pcm; // 量停頓用
+  return out;
 }
 
 // 錄音器沒有自己的按鈕，由「開始作答」一起控制：開始＝錄音＋計時，停止＝停錄並轉文字
@@ -622,7 +685,10 @@ function recorder(onText) {
         const r = await fetch(TRANSCRIBE_URL, { method: "POST", headers: apiHeaders("audio/wav"), body: wav });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) status.textContent = j.message || "轉文字失敗，請再錄一次。";
-        else { onText(j.text); status.textContent = "已轉成文字，放進下面的回答欄；上面可以回聽錄音。"; }
+        else {
+          let part = null;
+          try { const m = measurePauses(wav.pcm, 16000); if (m) part = { words: countWords(j.text), sec: m.sec, long: m.pauses.filter(p => p >= 1).length }; } catch {}
+          onText(j.text, part); status.textContent = "已轉成文字，放進下面的回答欄；上面可以回聽錄音。"; }
       } catch { status.textContent = "轉文字失敗，請檢查網路後再錄一次。"; }
     };
     rec.start(); activeRec = stop;
@@ -716,13 +782,22 @@ function answerArea(qid, question, part) {
   const draftKey = "draft:" + qid;
   const ta = el("textarea", { id: "ans-" + qid, rows: "4", placeholder: "按上面的「錄音」作答，或直接打字" });
   ta.value = store.get(draftKey, "");
-  ta.addEventListener("input", () => store.set(draftKey, ta.value));
+  ta.addEventListener("input", () => { store.set(draftKey, ta.value); if (!ta.value.trim()) { audioParts = []; store.set(audioKey, audioParts); showFlu(); } });
   const fb = el("div", { class: "feedback", hidden: true });
   const status = el("span", { class: "status" });
+  const audioKey = "audio:" + qid;
+  let audioParts = store.get(audioKey, []);
+  const flu = el("p", { class: "note" });
+  const showFlu = () => {
+    const st = fluencyStats(audioParts);
+    flu.textContent = st ? `錄音量測：語速每分鐘 ${st.wpm} 字（不算 um/uh）· 超過 1 秒的停頓每分鐘 ${st.longPerMin} 次 · 流利估計 ${st.fc} 分（8 分考生約 135–145 字）` : (audioParts.length ? "錄音太短，量不出流利度（至少說 15 個字）。" : "");
+    flu.hidden = !flu.textContent;
+  };
+  showFlu();
   const askBtn = el("button", { class: "b", onclick: async () => {
     if (!ta.value.trim()) { status.textContent = "先寫下或貼上你的回答，才能請 AI 批改。"; return; }
     askBtn.disabled = true; fb.hidden = false; fb.textContent = "AI 批改中，大約 10–20 秒…";
-    showReview(fb, await aiReview({ kind: "speaking", part, question, answer: ta.value }), "口說 Part " + part);
+    showReview(fb, await aiReview({ kind: "speaking", part, question, answer: ta.value, audio: fluencyStats(audioParts) || undefined }), "口說 Part " + part);
     askBtn.disabled = false;
   } }, "AI 批改");
   const saveBtn = el("button", { class: "b", onclick: async () => {
@@ -731,11 +806,16 @@ function answerArea(qid, question, part) {
     if (db) { try { await db.collection("speaking").add(rec); status.textContent = "已存到紀錄。"; } catch { status.textContent = "只存在這台裝置。"; } }
     else status.textContent = "已存在這台裝置。";
   } }, "存到紀錄");
-  const rec = recorder(text => { ta.value = ta.value.trim() ? ta.value.trim() + "\n" + text : text; store.set(draftKey, ta.value); });
+  const rec = recorder((text, part) => {
+    if (!ta.value.trim()) audioParts = [];
+    ta.value = ta.value.trim() ? ta.value.trim() + "\n" + text : text; store.set(draftKey, ta.value);
+    if (part) { audioParts.push(part); store.set(audioKey, audioParts); }
+    showFlu();
+  });
   const box = el("div", { style: "display:flex;flex-direction:column;gap:8px" },
     rec.node,
     el("label", { class: "f", for: "ans-" + qid }, "我的回答（錄音停止後會自動轉成文字放這裡，也可以自己修改）"), ta,
-    el("div", { class: "btns" }, saveBtn, askBtn, status), fb);
+    flu, el("div", { class: "btns" }, saveBtn, askBtn, status), fb);
   box.rec = rec;
   return box;
 }
