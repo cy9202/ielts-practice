@@ -569,10 +569,10 @@ async function aiReview(body) {
 }
 
 /* ---------- 錄音量流利度（在瀏覽器算，不用 AI 額度） ---------- */
-// 從錄音量流利度（和 calibration\speaking\fluency.py 同一套算法）：
+// 從錄音量流利度（和 calibrationspeakingluency.py 同一套音量判斷）：
 // 20ms 音框的音量 → 自適應門檻判斷有沒有在說話 → 從第一個聲音算到最後一個 → 停頓
-// 字數用 Whisper 逐字稿（不算 um/uh），語速＝字數 ÷ 說話時段
-// 換算（11/15 用 7 位考官評分的 Part 2 獨白校準：8 分 136–143 字/分，6.5 以下 91–104）
+// 11/16 改版：不看語速，改看「說話時間佔整段的比例」（停頓越少越高）
+// 換算：10 位考官評分的 Part 2 獨白擬合 流利 ≈ 0.057 + 9.655 × 比例（留一法平均誤差 0.80，約 ±1 分）
 const FLUENCY_FILLERS = new Set(["um", "uh", "uhm", "er", "ah", "hmm", "mm", "erm"]);
 function pctl(sorted, p) { // 同 numpy.percentile（線性內插）
   const i = (sorted.length - 1) * p / 100, lo = Math.floor(i), hi = Math.ceil(i);
@@ -610,23 +610,22 @@ function measurePauses(pcm, rate) {
     if (!v[i]) { let j = i; while (j < v.length && !v[j]) j++; const d = (j - i) * 0.02; if (d >= 0.25) pauses.push(d); i = j; }
     else i++;
   }
-  return { sec: v.length * 0.02, pauses };
+  return { sec: v.length * 0.02, voiced: v.filter(Boolean).length * 0.02, pauses };
 }
 function countWords(text) {
   return (text.toLowerCase().match(/[a-z][a-z'’-]*/g) || []).filter(w => !FLUENCY_FILLERS.has(w)).length;
 }
-function fluencyBand(wpm, longPerMin) {
-  let b = wpm >= 130 ? 8 : wpm >= 115 ? 7 : wpm >= 100 ? 6 : wpm >= 85 ? 5 : 4;
-  if (longPerMin >= 6) b = Math.min(b, 5);
-  return b;
+function fluencyBand(phon) {
+  return Math.min(8, Math.max(4, Math.round(0.057 + 9.655 * phon)));
 }
-// 多段錄音合併：字數、秒數、長停頓相加
+// 多段錄音合併：秒數、說話秒數、停頓次數相加（舊版紀錄沒有 voiced，就不量）
 function fluencyStats(parts) {
-  const words = parts.reduce((a, p) => a + p.words, 0), sec = parts.reduce((a, p) => a + p.sec, 0);
-  const long = parts.reduce((a, p) => a + p.long, 0);
-  if (sec < 8 || words < 15) return null; // 太短量不準
-  const wpm = Math.round(words / (sec / 60)), longPerMin = Math.round(long / (sec / 60) * 10) / 10;
-  return { words, sec: Math.round(sec), wpm, longPerMin, fc: fluencyBand(wpm, longPerMin) };
+  if (!parts.length || parts.some(p => typeof p.voiced !== "number")) return null;
+  const sec = parts.reduce((a, p) => a + p.sec, 0), voiced = parts.reduce((a, p) => a + p.voiced, 0);
+  const long2 = parts.reduce((a, p) => a + (p.long2 || 0), 0);
+  if (sec < 8) return null; // 太短量不準
+  const phon = Math.round(voiced / sec * 100) / 100;
+  return { sec: Math.round(sec), phon, long2PerMin: Math.round(long2 / (sec / 60) * 10) / 10, fc: fluencyBand(phon) };
 }
 
 /* ---------- 錄音轉文字（Whisper，在 Cloudflare 上跑） ---------- */
@@ -687,7 +686,7 @@ function recorder(onText) {
         if (!r.ok) status.textContent = j.message || "轉文字失敗，請再錄一次。";
         else {
           let part = null;
-          try { const m = measurePauses(wav.pcm, 16000); if (m) part = { words: countWords(j.text), sec: m.sec, long: m.pauses.filter(p => p >= 1).length }; } catch {}
+          try { const m = measurePauses(wav.pcm, 16000); if (m) part = { sec: m.sec, voiced: m.voiced, long2: m.pauses.filter(p => p >= 2).length }; } catch {}
           onText(j.text, part); status.textContent = "已轉成文字，放進下面的回答欄；上面可以回聽錄音。"; }
       } catch { status.textContent = "轉文字失敗，請檢查網路後再錄一次。"; }
     };
@@ -790,7 +789,7 @@ function answerArea(qid, question, part) {
   const flu = el("p", { class: "note" });
   const showFlu = () => {
     const st = fluencyStats(audioParts);
-    flu.textContent = st ? `錄音量測：語速每分鐘 ${st.wpm} 字（不算 um/uh）· 超過 1 秒的停頓每分鐘 ${st.longPerMin} 次 · 流利估計 ${st.fc} 分（8 分考生約 135–145 字）` : (audioParts.length ? "錄音太短，量不出流利度（至少說 15 個字）。" : "");
+    flu.textContent = st ? `錄音量測：說話時間佔 ${Math.round(st.phon * 100)}%（8 分考生約 73–88%）· 停 2 秒以上每分鐘 ${st.long2PerMin} 次 · 流利估計 ${st.fc} 分（約 ±1 分）` : (audioParts.length ? "這段錄音量不出流利度（太短，或是舊版錄音，請重錄）。" : "");
     flu.hidden = !flu.textContent;
   };
   showFlu();
