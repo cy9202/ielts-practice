@@ -103,6 +103,7 @@ table.vocab th{font-size:12px;color:var(--muted);font-weight:500}
 .v-en{font-weight:700;white-space:nowrap}
 .v-ex{color:var(--muted);font-size:13px}
 .v-used{display:inline-block;margin-left:6px;font-size:11px;font-weight:500;color:#3f7d4e;border:1px solid #3f7d4e;border-radius:999px;padding:0 6px}
+mark.v-hit{background:none;color:var(--done);font-weight:700;border-bottom:2px solid var(--done)}
 .v-topic{margin:14px 0 4px;font-size:15px}
 table.collo{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
 table.collo th{text-align:left;font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:500;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0}
@@ -1078,9 +1079,10 @@ async function requestRewrite(body) {
 // 左右對照：我的文章逐段對齊改寫範文，手機上改成上下
 function compareView(data, r) {
   let right, list;
+  const vw = ((store.get("vocab:" + wrKey(), null) || {}).words || []);
   if (r.paragraphs) {
     right = r.paragraphs.map(p => el("div", { class: "sents" }, p.sentences.map(x => el("div", { class: "sent" },
-      el("span", {}, x.text),
+      el("span", {}, ...markVocab(x.text, vw)),
       el("div", { class: "sent-tag" },
         x.role ? el("span", { class: "sent-role" }, x.role) : null,
         x.pattern && x.pattern !== "—" ? el("span", { class: "sent-pat" }, x.pattern.replace(/\[[^\]]*\]/g, "…").replace(/…(?:[\s,]*…)+/g, "…")) : null)))));
@@ -1102,6 +1104,7 @@ function compareView(data, r) {
   }
   return el("div", { style: "display:flex;flex-direction:column;gap:12px;white-space:normal" },
     grid,
+    r.paragraphs && vw.length ? vocabUsedView(r, vw) : null,
     !r.paragraphs ? el("p", { class: "note" }, "這篇範文是舊版產生的，沒有句型標註；按「重新改寫一篇」就會有。") : null,
     list.length ? el("div", { class: "frames" }, el("span", { class: "frames-h" }, "改了什麼"),
       el("ul", { style: "margin:0;padding-left:20px" }, list.map(t => el("li", {}, t)))) : null);
@@ -1365,7 +1368,14 @@ function renderWrPanel() {
   const rwBtn = el("button", { class: "b", onclick: async () => {
     const essay = essayText(data);
     if (wordCount(essay) < 40) { rw.hidden = false; rw.textContent = "先把文章寫得完整一點，再請 AI 改寫範文。"; return; }
-    rwBtn.disabled = true; rw.hidden = false; rwNote.textContent = ""; rw.textContent = "正在依你的文章改寫範文，大約 20–30 秒…";
+    rwBtn.disabled = true; rw.hidden = false; rwNote.textContent = "";
+    // 還沒有這題的主題單字就先整理，範文才能用上
+    if (!(store.get("vocab:" + wrKey(), null) || {}).words) {
+      rw.textContent = "先整理這題的主題單字…";
+      const v = await requestVocab(wrPrompt(), essay);
+      if (v.words) { store.set("vocab:" + wrKey(), v); addVocab(v.topic, v.words); }
+    }
+    rw.textContent = "正在依你的文章改寫範文，大約 20–30 秒…";
     const r = await requestRewrite({ type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: essay, vocab: ((store.get("vocab:" + wrKey(), null) || {}).words || []).map(w => w.en).join(", ") });
     rwBtn.disabled = false;
     if (!r.text) { rw.textContent = r.message; return; }
@@ -1572,6 +1582,36 @@ async function requestVocab(question, text) {
     const j = await r.json().catch(() => ({}));
     return r.ok ? j : { message: j.message || "這次沒有整理出單字。" };
   } catch { return { message: "連不上伺服器，單字沒有整理。" }; }
+}
+
+
+// 主題單字比對：每個字允許字尾變化（ease → eases/eased、emission → emissions）
+function vocabRe(en) {
+  const parts = en.trim().split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/(es|s|ed|ing|e)$/i, "") + "[a-z]*");
+  return new RegExp("\\b" + parts.join("[\\s-]+"), "gi");
+}
+// 把範文句子裡用到的主題單字標成綠色
+function markVocab(text, words) {
+  const hits = [];
+  for (const w of words) for (const m of text.matchAll(vocabRe(w.en))) hits.push({ s: m.index, e: m.index + m[0].length, w });
+  hits.sort((a, b) => a.s - b.s || b.e - a.e);
+  const out = []; let pos = 0;
+  for (const h of hits) {
+    if (h.s < pos) continue;
+    out.push(text.slice(pos, h.s), el("mark", { class: "v-hit", title: h.w.zh || "" }, text.slice(h.s, h.e)));
+    pos = h.e;
+  }
+  out.push(text.slice(pos));
+  return out;
+}
+function vocabUsedView(r, words) {
+  const full = r.paragraphs.map(p => p.sentences.map(x => x.text).join(" ")).join(" ");
+  const used = words.filter(w => vocabRe(w.en).test(full));
+  const unused = words.filter(w => !used.includes(w));
+  return el("div", { class: "frames" },
+    el("span", { class: "frames-h" }, `範文用到的主題單字 ${used.length}/${words.length}（綠字）`),
+    el("div", { class: "frame-x" }, used.map(w => `${w.en}（${w.zh}）`).join("、") || "這篇沒有用到，按「重新改寫一篇」再試。"),
+    unused.length ? el("div", { class: "frame-n" }, "沒用到：" + unused.map(w => w.en).join("、")) : null);
 }
 
 /* ---------- 主題單字（批改時整理的常用單字，依主題分組） ---------- */
