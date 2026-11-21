@@ -1079,7 +1079,7 @@ async function requestRewrite(body) {
 // 左右對照：我的文章逐段對齊改寫範文，手機上改成上下
 function compareView(data, r) {
   let right, list;
-  const vw = ((store.get("vocab:" + wrKey(), null) || {}).words || []);
+  const vw = ((store.get("vocab:" + wrKey(), null) || {}).words || []).slice(0, 8);
   if (r.paragraphs) {
     right = r.paragraphs.map(p => el("div", { class: "sents" }, p.sentences.map(x => el("div", { class: "sent" },
       el("span", {}, ...markVocab(x.text, vw)),
@@ -1301,13 +1301,14 @@ function renderWrPanel() {
   const runChecks = () => {
   store.set(reviewedKey, essayForSpell);
   // 這題常用單字：每一題只整理一次（不看文章有沒有改），結果存進「主題單字」
-  if (vCache && vCache.words && vCache.v === 2) showVocab(vCache);
+  if (vCache && vCache.words && vCache.v === 3) showVocab(vCache);
   else {
     vocabBox.replaceChildren(el("p", { class: "status" }, "正在整理這題可以用的常用單字…"));
     requestVocab(wrPrompt(), essayForSpell).then(r => {
       if (!r.words) { vocabBox.replaceChildren(el("p", { class: "status" }, r.message)); return; }
-      store.set(vKey, { ...r, v: 2 });
-      addVocab(r.topic, r.words);
+      if (vCache && vCache.words) removeVocab(vCache.words);
+      store.set(vKey, { ...r, words: r.words.slice(0, 8), v: 3 });
+      addVocab(r.topic, r.words.slice(0, 8));
       showVocab(r);
     });
   }
@@ -1370,13 +1371,14 @@ function renderWrPanel() {
     if (wordCount(essay) < 40) { rw.hidden = false; rw.textContent = "先把文章寫得完整一點，再請 AI 改寫範文。"; return; }
     rwBtn.disabled = true; rw.hidden = false; rwNote.textContent = "";
     // 還沒有這題的主題單字就先整理，範文才能用上
-    if ((store.get("vocab:" + wrKey(), null) || {}).v !== 2) {
+    const oldV = store.get("vocab:" + wrKey(), null);
+    if ((oldV || {}).v !== 3) {
       rw.textContent = "先整理這題的主題單字…";
       const v = await requestVocab(wrPrompt(), essay);
-      if (v.words) { store.set("vocab:" + wrKey(), { ...v, v: 2 }); addVocab(v.topic, v.words); }
+      if (v.words) { if (oldV && oldV.words) removeVocab(oldV.words); store.set("vocab:" + wrKey(), { ...v, words: v.words.slice(0, 8), v: 3 }); addVocab(v.topic, v.words.slice(0, 8)); }
     }
     rw.textContent = "正在依你的文章改寫範文，大約 20–30 秒…";
-    const r = await requestRewrite({ type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: essay, vocab: ((store.get("vocab:" + wrKey(), null) || {}).words || []).map(w => w.en).join(", ") });
+    const r = await requestRewrite({ type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: essay, vocab: ((store.get("vocab:" + wrKey(), null) || {}).words || []).slice(0, 8).map(w => w.en).join(", ") });
     rwBtn.disabled = false;
     if (!r.text) { rw.textContent = r.message; return; }
     store.set(rwKey, { essay, r });
@@ -1618,6 +1620,11 @@ function vocabUsedView(r, words) {
 const MY_VOCAB_KEY = "myVocab";
 const VOCAB_STATE = { q: "" };
 function myVocab() { return store.get(MY_VOCAB_KEY, []); }
+// 這題重新整理單字時，把舊的那批從「主題單字」拿掉
+function removeVocab(words) {
+  const drop = new Set(words.map(w => String(w.en || "").toLowerCase()));
+  store.set(MY_VOCAB_KEY, myVocab().filter(x => !drop.has(x.en.toLowerCase())));
+}
 function addVocab(topic, words) {
   const m = myVocab();
   let added = 0;
@@ -1636,7 +1643,7 @@ function vocabView(r, essay) {
   return el("div", { class: "vocab-box" },
     el("span", { class: "vocab-h" }, `這題可以用的常用單字${r.topic ? "（" + r.topic + "）" : ""} · 已存進「主題單字」`),
     el("div", { class: "c-wrap" }, el("table", { class: "vocab" },
-      el("tbody", {}, r.words.map(w => el("tr", {},
+      el("tbody", {}, r.words.slice(0, 8).map(w => el("tr", {},
         el("td", { class: "v-en" }, w.en, lower.includes(w.en.toLowerCase()) ? el("span", { class: "v-used" }, "已用") : null),
         el("td", {}, w.zh, w.ex ? el("div", { class: "v-ex" }, w.ex) : null)))))));
 }
