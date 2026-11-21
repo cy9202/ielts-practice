@@ -1301,12 +1301,12 @@ function renderWrPanel() {
   const runChecks = () => {
   store.set(reviewedKey, essayForSpell);
   // 這題常用單字：每一題只整理一次（不看文章有沒有改），結果存進「主題單字」
-  if (vCache && vCache.words) showVocab(vCache);
+  if (vCache && vCache.words && vCache.v === 2) showVocab(vCache);
   else {
     vocabBox.replaceChildren(el("p", { class: "status" }, "正在整理這題可以用的常用單字…"));
     requestVocab(wrPrompt(), essayForSpell).then(r => {
       if (!r.words) { vocabBox.replaceChildren(el("p", { class: "status" }, r.message)); return; }
-      store.set(vKey, r);
+      store.set(vKey, { ...r, v: 2 });
       addVocab(r.topic, r.words);
       showVocab(r);
     });
@@ -1370,10 +1370,10 @@ function renderWrPanel() {
     if (wordCount(essay) < 40) { rw.hidden = false; rw.textContent = "先把文章寫得完整一點，再請 AI 改寫範文。"; return; }
     rwBtn.disabled = true; rw.hidden = false; rwNote.textContent = "";
     // 還沒有這題的主題單字就先整理，範文才能用上
-    if (!(store.get("vocab:" + wrKey(), null) || {}).words) {
+    if ((store.get("vocab:" + wrKey(), null) || {}).v !== 2) {
       rw.textContent = "先整理這題的主題單字…";
       const v = await requestVocab(wrPrompt(), essay);
-      if (v.words) { store.set("vocab:" + wrKey(), v); addVocab(v.topic, v.words); }
+      if (v.words) { store.set("vocab:" + wrKey(), { ...v, v: 2 }); addVocab(v.topic, v.words); }
     }
     rw.textContent = "正在依你的文章改寫範文，大約 20–30 秒…";
     const r = await requestRewrite({ type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: essay, vocab: ((store.get("vocab:" + wrKey(), null) || {}).words || []).map(w => w.en).join(", ") });
