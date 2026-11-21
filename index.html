@@ -1253,7 +1253,7 @@ function renderWrPanel() {
       fs.append(el("label", { class: "f", for: id }, label), input);
       if (fr && fr[key] && fr[key].length) fs.append(frameBox(fr[key], input));
     }
-    p.append(framesBar(data), fs, el("div", { class: "btns" },
+    p.append(vocabPanel(data), framesBar(data), fs, el("div", { class: "btns" },
       el("button", { class: "b", disabled: WR.step === 0, onclick: () => { WR.step--; renderWrPanel(); } }, "上一步"),
       el("button", { class: "b primary", onclick: () => { WR.step++; renderWrPanel(); } }, WR.step === FIELDS.length - 1 ? "看整篇文章 →" : "下一步")));
     if (WR.step === 0) { const t = WR.sel !== -1 ? W2[WR.sel][0] : data.kind; if (STRUCT[t]) p.append(el("div", { class: "frames" }, el("span", { class: "frames-h" }, "這個題型的標準架構"), el("div", { class: "frame-x" }, STRUCT[t]), el("div", { class: "frame-n" }, STRUCT_TIPS))); }
@@ -1281,6 +1281,7 @@ function renderWrPanel() {
   const vCache = store.get(vKey, null);
   const vocabBox = el("div");
   const showVocab = r => vocabBox.replaceChildren(vocabView(r, essayForSpell));
+  if (vCache && vCache.words && vCache.v === 3) showVocab(vCache);
   const drawParas = typos => {
     if (typos !== undefined) curTypos = typos;
     paraBox.replaceChildren(...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, ...(t ? highlightEssay(t, curTypos, curUps, curGr) : ["（還沒寫）"])))));
@@ -1355,6 +1356,7 @@ function renderWrPanel() {
     "例子具體（生活觀察、社會現象都可以），不是「研究顯示」",
     "問題解決題：解法有說清楚誰來做、怎麼做；雙問句：兩個問題都分開回答",
     "開頭簡短概括題意，結論沒有省略也沒有加新觀點",
+    "用了至少 5 個這題的主題單字（綠色「已用」）",
   ];
   // 範文存在這台電腦：同一篇只改寫一次，下次直接顯示
   const rwKey = "rewrite:" + wrKey();
@@ -1616,6 +1618,39 @@ function vocabUsedView(r, words) {
     unused.length ? el("div", { class: "frame-n" }, "沒用到：" + unused.map(w => w.en).join("、")) : null);
 }
 
+
+// 寫作前先看主題單字：只依題目整理（不看文章），每題一次，寫作每一步都顯示並標出已用
+const VOCAB_LOADING = new Set();
+function vocabPanel(data) {
+  const key = "vocab:" + wrKey();
+  const c = store.get(key, null);
+  const box = el("div", { class: "frames" });
+  if (c && c.words && c.v === 3) {
+    const essay = essayText(data);
+    const isUsed = w => vocabRe(w.en).test(essay);
+    const n = c.words.filter(isUsed).length;
+    box.append(el("span", { class: "frames-h" }, `這題的主題單字${c.topic ? "（" + c.topic + "）" : ""} · 先學這些，寫作時盡量用上 · 已用 ${n}/${c.words.length}`),
+      el("div", { class: "c-wrap" }, el("table", { class: "vocab" }, el("tbody", {}, c.words.map(w => el("tr", {},
+        el("td", { class: "v-en" }, w.en, isUsed(w) ? el("span", { class: "v-used" }, "已用") : null),
+        el("td", {}, w.zh, w.ex ? el("div", { class: "v-ex" }, w.ex) : null)))))));
+    return box;
+  }
+  const msg = el("p", { class: "status", style: "margin:0" }, "正在整理這題的 8 個主題單字（約 10 秒），先看單字再開始寫…");
+  box.append(el("span", { class: "frames-h" }, "這題的主題單字"), msg);
+  if (!VOCAB_LOADING.has(key)) {
+    VOCAB_LOADING.add(key);
+    requestVocab(wrPrompt(), "").then(r => {
+      VOCAB_LOADING.delete(key);
+      if (!r.words) { msg.textContent = r.message; return; }
+      if (c && c.words) removeVocab(c.words);
+      store.set(key, { ...r, words: r.words.slice(0, 8), v: 3 });
+      addVocab(r.topic, r.words.slice(0, 8));
+      if ("vocab:" + wrKey() === key && box.isConnected) box.replaceWith(vocabPanel(data));
+    });
+  }
+  return box;
+}
+
 /* ---------- 主題單字（批改時整理的常用單字，依主題分組） ---------- */
 const MY_VOCAB_KEY = "myVocab";
 const VOCAB_STATE = { q: "" };
@@ -1641,7 +1676,7 @@ function addVocab(topic, words) {
 function vocabView(r, essay) {
   const lower = (essay || "").toLowerCase();
   return el("div", { class: "vocab-box" },
-    el("span", { class: "vocab-h" }, `這題可以用的常用單字${r.topic ? "（" + r.topic + "）" : ""} · 已存進「主題單字」`),
+    el("span", { class: "vocab-h" }, `這題的主題單字${r.topic ? "（" + r.topic + "）" : ""} · 已用的標綠色 · 已存進「主題單字」分頁`),
     el("div", { class: "c-wrap" }, el("table", { class: "vocab" },
       el("tbody", {}, r.words.slice(0, 8).map(w => el("tr", {},
         el("td", { class: "v-en" }, w.en, lower.includes(w.en.toLowerCase()) ? el("span", { class: "v-used" }, "已用") : null),
@@ -1663,11 +1698,11 @@ function renderVocab() {
         el("td", { class: "v-en" }, r.en),
         el("td", {}, r.zh, r.ex ? el("div", { class: "v-ex" }, r.ex) : null),
         el("td", { style: "width:1%" }, el("button", { class: "b", style: "font-size:12px;padding:2px 8px", onclick: () => { const m = myVocab(); m.splice(i, 1); store.set(MY_VOCAB_KEY, m); renderVocab(); } }, "刪除")))))))))
-      : [el("p", { class: "note" }, q ? "沒有符合的單字。" : "還沒有單字。寫作按「AI 批改文章」後，這題的常用單字會自動存進來。")]));
+      : [el("p", { class: "note" }, q ? "沒有符合的單字。" : "還沒有單字。寫作選一題，就會先整理這題的 8 個主題單字並存進來。")]));
   };
   search.addEventListener("input", () => { VOCAB_STATE.q = search.value; fill(); });
   fill();
-  p.append(el("p", { class: "note" }, `寫作批改時整理的常用單字和搭配詞，依主題分組，共 ${rows.length} 個。都是簡單常見的字，考前看這頁就好。`), search, box);
+  p.append(el("p", { class: "note" }, `每一題寫作前整理的 7–7.5 分主題單字，依主題分組，共 ${rows.length} 個。都是簡單常見的字，考前看這頁就好。`), search, box);
 }
 
 /* ---------- 更好的說法（自己寫過、可以寫更好的片語） ---------- */
