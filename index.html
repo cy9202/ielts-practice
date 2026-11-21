@@ -95,6 +95,15 @@ legend{font-weight:700;font-size:14px;padding:0 6px}
 .frame-n{font-size:12.5px;color:var(--muted)}
 button.b.frame-use{align-self:flex-start;font-size:12.5px;padding:3px 10px;margin-top:2px}
 .c-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+.vocab-box{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.vocab-h{font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
+table.vocab{border-collapse:collapse;width:100%;font-size:14px}
+table.vocab td,table.vocab th{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+table.vocab th{font-size:12px;color:var(--muted);font-weight:500}
+.v-en{font-weight:700;white-space:nowrap}
+.v-ex{color:var(--muted);font-size:13px}
+.v-used{display:inline-block;margin-left:6px;font-size:11px;font-weight:500;color:#3f7d4e;border:1px solid #3f7d4e;border-radius:999px;padding:0 6px}
+.v-topic{margin:14px 0 4px;font-size:15px}
 table.collo{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
 table.collo th{text-align:left;font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:500;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0}
 table.collo td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -179,6 +188,7 @@ mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline
     <button role="tab" id="tab-write" aria-selected="false" data-tab="write">寫作</button>
     <button role="tab" id="tab-collo" aria-selected="false" data-tab="collo">搭配詞</button>
     <button role="tab" id="tab-upg" aria-selected="false" data-tab="upg">更好的說法</button>
+    <button role="tab" id="tab-vocab" aria-selected="false" data-tab="vocab">主題單字</button>
     <button role="tab" id="tab-log" aria-selected="false" data-tab="log">紀錄</button>
   </nav>
 
@@ -204,6 +214,10 @@ mark.upg{background:none;color:#2f6db5;font-weight:700;text-decoration:underline
 
   <section id="view-upg" hidden>
     <main class="panel" id="upg-panel"></main>
+  </section>
+
+  <section id="view-vocab" hidden>
+    <main class="panel" id="vocab-panel"></main>
   </section>
 
   <section id="view-log" hidden>
@@ -1260,6 +1274,10 @@ function renderWrPanel() {
   let curGr = grCache && grCache.essay === essayForSpell ? grCache.fixes : null;
   const grStatus = el("p", { class: "status" });
   const grList = el("ol", { class: "gfix-list" });
+  const vKey = "vocab:" + wrKey();
+  const vCache = store.get(vKey, null);
+  const vocabBox = el("div");
+  const showVocab = r => vocabBox.replaceChildren(vocabView(r, essayForSpell));
   const drawParas = typos => {
     if (typos !== undefined) curTypos = typos;
     paraBox.replaceChildren(...essayParas(data).map(([h, t]) => el("div", {}, el("h4", {}, h), el("p", {}, ...(t ? highlightEssay(t, curTypos, curUps, curGr) : ["（還沒寫）"])))));
@@ -1279,6 +1297,17 @@ function renderWrPanel() {
   if (!reviewed) curUps = curGr = null;
   const runChecks = () => {
   store.set(reviewedKey, essayForSpell);
+  // 這題常用單字：每一題只整理一次（不看文章有沒有改），結果存進「主題單字」
+  if (vCache && vCache.words) showVocab(vCache);
+  else {
+    vocabBox.replaceChildren(el("p", { class: "status" }, "正在整理這題可以用的常用單字…"));
+    requestVocab(wrPrompt(), essayForSpell).then(r => {
+      if (!r.words) { vocabBox.replaceChildren(el("p", { class: "status" }, r.message)); return; }
+      store.set(vKey, r);
+      addVocab(r.topic, r.words);
+      showVocab(r);
+    });
+  }
   if (!curGr && wordCount(essayForSpell) >= 20) {
     grStatus.textContent = "正在檢查文法和太長的句子…";
     requestGrammar(essayForSpell).then(r => {
@@ -1315,7 +1344,7 @@ function renderWrPanel() {
   else drawParas(null);
   const outline = el("div", { class: "outline" },
     el("p", { class: words >= 250 ? "status" : "status warn-text" }, `共 ${words} 字${words >= 250 ? "" : "，不到 250 字，任務回應會被扣分"}`),
-    grStatus, spStatus, upStatus, paraBox, grList);
+    grStatus, spStatus, upStatus, paraBox, grList, vocabBox);
   const checks = [
     "立場明確，引言和結論一致（雙面討論題結論一定要表態）",
     "每段只聚焦一個重點，段落安排符合這個題型的標準架構",
@@ -1337,13 +1366,13 @@ function renderWrPanel() {
     const essay = essayText(data);
     if (wordCount(essay) < 40) { rw.hidden = false; rw.textContent = "先把文章寫得完整一點，再請 AI 改寫範文。"; return; }
     rwBtn.disabled = true; rw.hidden = false; rwNote.textContent = ""; rw.textContent = "正在依你的文章改寫範文，大約 20–30 秒…";
-    const r = await requestRewrite({ type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: essay });
+    const r = await requestRewrite({ type: WR.sel >= 0 ? W2[WR.sel][0] : (data.kind || "opinion"), question: wrPrompt(), answer: essay, vocab: ((store.get("vocab:" + wrKey(), null) || {}).words || []).map(w => w.en).join(", ") });
     rwBtn.disabled = false;
     if (!r.text) { rw.textContent = r.message; return; }
     store.set(rwKey, { essay, r });
     rw.replaceChildren(compareView(data, r));
     rwBtn.textContent = "重新改寫一篇";
-  } }, !cached ? "依我的文章改寫 7 分範文" : cached.essay !== essayNow ? "依修改後的文章重新改寫" : "重新改寫一篇");
+  } }, !cached ? "依我的文章改寫 7–7.5 分範文（簡單句型）" : cached.essay !== essayNow ? "依修改後的文章重新改寫" : "重新改寫一篇");
   const fb = el("div", { class: "feedback", hidden: true });
   const status = el("span", { class: "status" });
   const askBtn = el("button", { class: "b", onclick: async () => {
@@ -1536,6 +1565,64 @@ function renderCollo() {
       el("div", { class: "c-form" }, fw, fr, fn), el("div", { class: "btns", style: "align-items:center" }, add, msg)));
 }
 
+
+async function requestVocab(question, text) {
+  try {
+    const r = await fetch(REVIEW_URL, { method: "POST", headers: apiHeaders("application/json"), body: JSON.stringify({ kind: "vocab", question, text }) });
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? j : { message: j.message || "這次沒有整理出單字。" };
+  } catch { return { message: "連不上伺服器，單字沒有整理。" }; }
+}
+
+/* ---------- 主題單字（批改時整理的常用單字，依主題分組） ---------- */
+const MY_VOCAB_KEY = "myVocab";
+const VOCAB_STATE = { q: "" };
+function myVocab() { return store.get(MY_VOCAB_KEY, []); }
+function addVocab(topic, words) {
+  const m = myVocab();
+  let added = 0;
+  for (const w of words) {
+    const en = String(w.en || "").trim();
+    if (!en || m.some(x => x.en.toLowerCase() === en.toLowerCase())) continue;
+    m.push({ en, zh: String(w.zh || "").trim(), ex: String(w.ex || "").trim(), topic: topic || "其他", ts: Date.now() });
+    added++;
+  }
+  store.set(MY_VOCAB_KEY, m);
+  return added;
+}
+// 批改後顯示在文章下面：這題可以用的常用單字，文章裡已經用到的標「已用」
+function vocabView(r, essay) {
+  const lower = (essay || "").toLowerCase();
+  return el("div", { class: "vocab-box" },
+    el("span", { class: "vocab-h" }, `這題可以用的常用單字${r.topic ? "（" + r.topic + "）" : ""} · 已存進「主題單字」`),
+    el("div", { class: "c-wrap" }, el("table", { class: "vocab" },
+      el("tbody", {}, r.words.map(w => el("tr", {},
+        el("td", { class: "v-en" }, w.en, lower.includes(w.en.toLowerCase()) ? el("span", { class: "v-used" }, "已用") : null),
+        el("td", {}, w.zh, w.ex ? el("div", { class: "v-ex" }, w.ex) : null)))))));
+}
+function renderVocab() {
+  const p = $("#vocab-panel"); p.replaceChildren();
+  const rows = myVocab();
+  const search = el("input", { type: "text", id: "vocab-q", placeholder: "搜尋中文或英文", value: VOCAB_STATE.q });
+  const box = el("div");
+  const fill = () => {
+    const q = VOCAB_STATE.q.trim().toLowerCase();
+    const shown = rows.map((r, i) => [r, i]).filter(([r]) => !q || [r.en, r.zh, r.ex, r.topic].join(" ").toLowerCase().includes(q));
+    const groups = new Map();
+    for (const [r, i] of shown) { if (!groups.has(r.topic)) groups.set(r.topic, []); groups.get(r.topic).push([r, i]); }
+    box.replaceChildren(...(shown.length ? [...groups].map(([topic, list]) => el("div", {},
+      el("h3", { class: "v-topic" }, `${topic} · ${list.length}`),
+      el("div", { class: "c-wrap" }, el("table", { class: "vocab" }, el("tbody", {}, list.map(([r, i]) => el("tr", {},
+        el("td", { class: "v-en" }, r.en),
+        el("td", {}, r.zh, r.ex ? el("div", { class: "v-ex" }, r.ex) : null),
+        el("td", { style: "width:1%" }, el("button", { class: "b", style: "font-size:12px;padding:2px 8px", onclick: () => { const m = myVocab(); m.splice(i, 1); store.set(MY_VOCAB_KEY, m); renderVocab(); } }, "刪除")))))))))
+      : [el("p", { class: "note" }, q ? "沒有符合的單字。" : "還沒有單字。寫作按「AI 批改文章」後，這題的常用單字會自動存進來。")]));
+  };
+  search.addEventListener("input", () => { VOCAB_STATE.q = search.value; fill(); });
+  fill();
+  p.append(el("p", { class: "note" }, `寫作批改時整理的常用單字和搭配詞，依主題分組，共 ${rows.length} 個。都是簡單常見的字，考前看這頁就好。`), search, box);
+}
+
 /* ---------- 更好的說法（自己寫過、可以寫更好的片語） ---------- */
 const MY_UPG_KEY = "myUpgrades";
 const UPG_STATE = { q: "" };
@@ -1656,12 +1743,13 @@ function renderLog() {
 document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => {
   stopTimer();
   document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
-  for (const t of ["speak", "write", "collo", "upg", "log"]) $("#view-" + t).hidden = t !== b.dataset.tab;
+  for (const t of ["speak", "write", "collo", "upg", "vocab", "log"]) $("#view-" + t).hidden = t !== b.dataset.tab;
   if (b.dataset.tab === "speak") renderSpPanel();
   if (b.dataset.tab === "write") renderWrite();
   if (b.dataset.tab === "log") renderLog();
   if (b.dataset.tab === "collo") renderCollo();
   if (b.dataset.tab === "upg") renderUpg();
+  if (b.dataset.tab === "vocab") renderVocab();
 }));
 renderSpeak();
 // Threads 的內建瀏覽器標記是 Barcelona；Android 內建瀏覽器有 "; wv)"，iOS 內建瀏覽器沒有 Safari 字樣
